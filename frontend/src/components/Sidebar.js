@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   StyleSheet, View, TouchableOpacity, Pressable,
-  Switch, ScrollView, Dimensions, Platform,
+  Switch, ScrollView, Dimensions, Platform, BackHandler,
 } from 'react-native';
 import Animated, {
   useSharedValue, useAnimatedStyle, withTiming, Easing,
@@ -112,6 +112,15 @@ export function Sidebar() {
       duration: 220, easing: Easing.out(Easing.quad),
     });
     overlayOp.value = withTiming(sidebarOpen ? 1 : 0, { duration: 220 });
+  }, [sidebarOpen]);
+
+  // Android hardware back button closes sidebar
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (sidebarOpen) { closeSidebar(); return true; }
+      return false;
+    });
+    return () => sub.remove();
   }, [sidebarOpen]);
 
   const drawerStyle  = useAnimatedStyle(() => ({ transform: [{ translateX: translateX.value }] }));
@@ -296,8 +305,11 @@ const styles = StyleSheet.create({
   userName:  { color: '#fff', fontSize: 16 },
   userSub:   { color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 },
   closeBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 42, height: 42,
+    borderRadius: 21,                          // full circle
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.45)',
     justifyContent: 'center', alignItems: 'center',
   },
   statsRow: { flexDirection: 'row', gap: 8 },

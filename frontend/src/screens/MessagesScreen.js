@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import {
-  View, ScrollView, StyleSheet, TouchableOpacity, RefreshControl,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { StyledText } from '../components/StyledText';
+import { PullRefreshScroll } from '../components/PullRefreshScroll';
 import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
-import { useRefresh } from '../hooks/useRefresh';
 import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 
 const MOCK_CHATS = [
@@ -61,25 +59,17 @@ const MOCK_CHATS = [
 export function MessagesScreen() {
   const { colors } = useTheme();
   const { showToast } = useApp();
-  const { refreshing, onRefresh } = useRefresh();
+  const onRefresh = () => new Promise(r => setTimeout(r, 800));
   const [chats] = useState(MOCK_CHATS);
 
   const totalUnread = chats.reduce((acc, c) => acc + c.unread, 0);
 
   return (
     <ScreenLayout title="Messages">
-      <ScrollView
+      <PullRefreshScroll
+        onRefresh={onRefresh}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#1D9BF0"
-            colors={['#1D9BF0', '#264B96']}
-            progressBackgroundColor="#fff"
-          />
-        }
       >
         {/* summary strip */}
         {totalUnread > 0 && (
@@ -147,7 +137,7 @@ export function MessagesScreen() {
             Contacts unlocked via ₹10 reveal appear here
           </StyledText>
         </View>
-      </ScrollView>
+      </PullRefreshScroll>
     </ScreenLayout>
   );
 }

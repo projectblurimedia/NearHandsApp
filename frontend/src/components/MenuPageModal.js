@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     width: 42, height: 42,
-    borderRadius: 14,                          // well-rounded squircle
+    borderRadius: 21,                          // full circle
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.45)',

@@ -20,7 +20,7 @@ const ICONS = {
 };
 
 const INACTIVE  = '#94A3B8';
-const FAB_SIZE  = 54;
+const FAB_SIZE  = 62;
 const FAB_RISE  = 22;
 
 /* ── tab item: icon + label stacked vertically for ALL tabs ─── */

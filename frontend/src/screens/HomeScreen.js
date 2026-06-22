@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { StyledText } from '../components/StyledText';
+import { PullRefreshScroll } from '../components/PullRefreshScroll';
 import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
-import { useRefresh } from '../hooks/useRefresh';
 import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 
 const CATEGORIES = [
@@ -87,7 +81,7 @@ export function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [workers, setWorkers] = useState(MOCK_WORKERS);
   const [workerActive, setWorkerActive] = useState(true);
-  const { refreshing, onRefresh } = useRefresh();
+  const onRefresh = () => new Promise(r => setTimeout(r, 800));
 
   const handleReveal = (workerId) => {
     showConfirm(
@@ -105,18 +99,10 @@ export function HomeScreen() {
   if (mode === 'worker') {
     return (
       <ScreenLayout title="NearHands">
-        <ScrollView
+        <PullRefreshScroll
+          onRefresh={onRefresh}
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#1D9BF0"
-              colors={['#1D9BF0', '#264B96']}
-              progressBackgroundColor="#fff"
-            />
-          }
         >
           <TouchableOpacity
             style={[
@@ -167,14 +153,14 @@ export function HomeScreen() {
               </View>
             </View>
           ))}
-        </ScrollView>
+        </PullRefreshScroll>
       </ScreenLayout>
     );
   }
 
   return (
     <ScreenLayout title="NearHands">
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <PullRefreshScroll onRefresh={onRefresh} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <StyledText weight="700" style={[styles.greeting, { color: colors.text }]}>
           Find Skilled Workers Near You
         </StyledText>
@@ -274,7 +260,7 @@ export function HomeScreen() {
             </View>
           </View>
         ))}
-      </ScrollView>
+      </PullRefreshScroll>
     </ScreenLayout>
   );
 }

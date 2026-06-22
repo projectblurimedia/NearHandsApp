@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Animated, TouchableOpacity, PanResponder, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StyledText } from './StyledText';
 import { useApp } from '../hooks/useApp';
+
+const { width: SW } = Dimensions.get('window');
 
 const TYPE_CONFIG = {
   success: { bg: '#10b981', icon: 'checkmark-circle', title: 'Success' },
@@ -15,24 +17,55 @@ export function Toast() {
   const { toast, dismissToast } = useApp();
 
   const slideY    = useRef(new Animated.Value(150)).current;
-  const opacity   = useRef(new Animated.Value(0)).current;
+  const baseOp    = useRef(new Animated.Value(0)).current;
+  const dragX     = useRef(new Animated.Value(0)).current;
+  const dragY     = useRef(new Animated.Value(0)).current;
+  const dragOp    = useRef(new Animated.Value(1)).current;
   const progress  = useRef(new Animated.Value(1)).current;
   const autoTimer = useRef(null);
 
-  // Keep a local copy so the toast content doesn't vanish during hide animation
   const [snapshot, setSnapshot] = useState(null);
   const [mounted, setMounted]   = useState(false);
 
-  const hide = () => {
+  const hide = (dx = 0, dy = 0) => {
     clearTimeout(autoTimer.current);
     Animated.parallel([
-      Animated.spring(slideY, { toValue: 150, tension: 55, friction: 8, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(dragX, { toValue: dx, duration: 200, useNativeDriver: true }),
+      Animated.timing(dragY, { toValue: dy, duration: 200, useNativeDriver: true }),
+      Animated.timing(dragOp, { toValue: 0, duration: 200, useNativeDriver: true }),
     ]).start(() => {
       setMounted(false);
       dismissToast();
     });
   };
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder:  () => true,
+      onPanResponderMove: (_, g) => {
+        dragX.setValue(g.dx);
+        dragY.setValue(g.dy);
+        dragOp.setValue(Math.max(0, 1 - (Math.abs(g.dx) + Math.abs(g.dy)) / 260));
+      },
+      onPanResponderRelease: (_, g) => {
+        const swipedH  = Math.abs(g.dx) > 90  || Math.abs(g.vx) > 0.8;
+        const swipedDn = g.dy > 70 || g.vy > 0.8;
+        const swipedUp = g.dy < -70 || g.vy < -0.8;
+
+        if (swipedH)  { hide(g.dx > 0 ? SW : -SW, 0);   return; }
+        if (swipedDn) { hide(0, 200);                     return; }
+        if (swipedUp) { hide(0, -200);                    return; }
+
+        // snap back
+        Animated.parallel([
+          Animated.spring(dragX,  { toValue: 0, friction: 5, useNativeDriver: true }),
+          Animated.spring(dragY,  { toValue: 0, friction: 5, useNativeDriver: true }),
+          Animated.spring(dragOp, { toValue: 1, friction: 5, useNativeDriver: true }),
+        ]).start();
+      },
+    })
+  ).current;
 
   useEffect(() => {
     if (toast) {
@@ -40,38 +73,52 @@ export function Toast() {
       setSnapshot(toast);
       setMounted(true);
 
+      // reset drag values
+      dragX.setValue(0);
+      dragY.setValue(0);
+      dragOp.setValue(1);
+
+      // entrance
       slideY.setValue(150);
-      opacity.setValue(0);
+      baseOp.setValue(0);
       progress.setValue(1);
 
       Animated.parallel([
         Animated.spring(slideY, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
-        Animated.spring(opacity, { toValue: 1, tension: 60, friction: 9, useNativeDriver: true }),
+        Animated.spring(baseOp, { toValue: 1, tension: 60, friction: 9, useNativeDriver: true }),
       ]).start();
 
       Animated.timing(progress, { toValue: 0, duration: 3000, useNativeDriver: false }).start();
 
-      autoTimer.current = setTimeout(hide, 3000);
+      autoTimer.current = setTimeout(() => hide(0, 120), 3000);
     }
     return () => clearTimeout(autoTimer.current);
   }, [toast]);
 
   if (!mounted || !snapshot) return null;
 
-  const cfg = TYPE_CONFIG[snapshot.type] ?? TYPE_CONFIG.info;
+  const cfg      = TYPE_CONFIG[snapshot.type] ?? TYPE_CONFIG.info;
   const barWidth = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const opacity  = Animated.multiply(baseOp, dragOp);
 
   return (
     <Animated.View
+      {...pan.panHandlers}
       style={[
         styles.container,
-        { backgroundColor: cfg.bg, transform: [{ translateY: slideY }], opacity },
+        {
+          backgroundColor: cfg.bg,
+          opacity,
+          transform: [
+            { translateY: Animated.add(slideY, dragY) },
+            { translateX: dragX },
+          ],
+        },
       ]}
     >
-      {/* main row */}
       <View style={styles.row}>
         <View style={styles.iconCircle}>
-          <Ionicons name={cfg.icon} size={30} color="#fff" />
+          <Ionicons name={cfg.icon} size={28} color="#fff" />
         </View>
 
         <View style={styles.texts}>
@@ -81,12 +128,11 @@ export function Toast() {
           </StyledText>
         </View>
 
-        <TouchableOpacity onPress={hide} style={styles.closeBtn} hitSlop={8}>
+        <TouchableOpacity onPress={() => hide(0, 120)} style={styles.closeBtn} hitSlop={8}>
           <Ionicons name="close" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* shrinking progress bar */}
       <View style={styles.progressBg}>
         <Animated.View style={[styles.progressFill, { width: barWidth }]} />
       </View>
@@ -119,11 +165,9 @@ const styles = StyleSheet.create({
     marginBottom:  10,
   },
   iconCircle: {
-    width: 38, height: 38,
-    borderRadius: 19,
+    width: 38, height: 38, borderRadius: 19,
     backgroundColor: 'rgba(255,255,255,0.18)',
-    justifyContent: 'center',
-    alignItems:     'center',
+    justifyContent: 'center', alignItems: 'center',
   },
   texts:   { flex: 1 },
   title:   { fontSize: 15, color: '#fff', lineHeight: 20 },
@@ -134,13 +178,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   progressBg: {
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 2,
-    overflow: 'hidden',
+    height: 3, backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 2, overflow: 'hidden',
   },
-  progressFill: {
-    height: 3,
-    backgroundColor: '#ffffff',
-  },
+  progressFill: { height: 3, backgroundColor: '#fff' },
 });

@@ -1,15 +1,12 @@
 import React from 'react';
-import {
-  View, ScrollView, StyleSheet, TouchableOpacity,
-  Switch, RefreshControl, Dimensions,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Switch, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { StyledText } from '../components/StyledText';
+import { PullRefreshScroll } from '../components/PullRefreshScroll';
 import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
-import { useRefresh } from '../hooks/useRefresh';
 import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
@@ -90,7 +87,7 @@ function MenuRow({ icon, iconColor, iconBg, label, right, onPress, colors, last 
 export function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const { mode, showConfirm, showToast } = useApp();
-  const { refreshing, onRefresh } = useRefresh();
+  const onRefresh = () => new Promise(r => setTimeout(r, 800));
 
   const initials = mode === 'worker' ? 'RK' : 'GU';
   const gradientColors = AVATAR_GRADIENTS[1];
@@ -106,13 +103,10 @@ export function ProfileScreen() {
 
   return (
     <ScreenLayout title="Profile">
-      <ScrollView
+      <PullRefreshScroll
+        onRefresh={onRefresh}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
-            tintColor="#1D9BF0" colors={['#1D9BF0', '#264B96']} progressBackgroundColor="#fff" />
-        }
       >
         {/* ── profile card ── */}
         <View style={[styles.profileCard, SHADOW, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -259,7 +253,7 @@ export function ProfileScreen() {
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
           <StyledText weight="400" style={{ color: colors.subtext, fontSize: 12 }}>Delete Account</StyledText>
         </TouchableOpacity>
-      </ScrollView>
+      </PullRefreshScroll>
     </ScreenLayout>
   );
 }

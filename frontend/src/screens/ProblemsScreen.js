@@ -1,20 +1,11 @@
 import React, { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  Pressable,
-  RefreshControl,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { StyledText } from '../components/StyledText';
+import { PullRefreshScroll } from '../components/PullRefreshScroll';
 import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
-import { useRefresh } from '../hooks/useRefresh';
 import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 
 const PROBLEM_CATEGORIES = ['Overcharging', 'No-show', 'Poor Quality', 'Rude Behavior', 'Other'];
@@ -34,7 +25,7 @@ const STATUS_COLOR = {
 export function ProblemsScreen() {
   const { colors } = useTheme();
   const { mode, showToast } = useApp();
-  const { refreshing, onRefresh } = useRefresh();
+  const onRefresh = () => new Promise(r => setTimeout(r, 800));
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -53,7 +44,7 @@ export function ProblemsScreen() {
   if (mode === 'worker') {
     return (
       <ScreenLayout title="Complaints">
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1D9BF0" colors={['#1D9BF0','#264B96']} progressBackgroundColor="#fff" />}>
+        <PullRefreshScroll onRefresh={onRefresh} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <StyledText weight="600" style={[styles.sectionTitle, { color: colors.text }]}>
             Complaints Against You
           </StyledText>
@@ -87,7 +78,7 @@ export function ProblemsScreen() {
               </StyledText>
             </View>
           )}
-        </ScrollView>
+        </PullRefreshScroll>
       </ScreenLayout>
     );
   }
@@ -135,7 +126,7 @@ export function ProblemsScreen() {
             </StyledText>
           </View>
         ))}
-      </ScrollView>
+      </PullRefreshScroll>
 
       <Modal visible={sheetVisible} transparent animationType="slide" onRequestClose={() => setSheetVisible(false)}>
         <Pressable style={styles.sheetOverlay} onPress={() => setSheetVisible(false)}>
