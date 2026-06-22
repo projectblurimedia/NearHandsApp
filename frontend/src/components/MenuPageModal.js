@@ -33,8 +33,11 @@ function PageHeader({ page, onClose }) {
       end={GRADIENT_END}
       style={[styles.pageHeader, { paddingTop: insets.top + 14 }]}
     >
-      <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.backBtn}>
-        <Ionicons name="arrow-back" size={22} color="#fff" />
+      {/* CampuSphere-style circular back button */}
+      <TouchableOpacity onPress={onClose} hitSlop={12}>
+        <View style={styles.backBtnCircle}>
+          <Ionicons name="arrow-back" size={20} color="#fff" />
+        </View>
       </TouchableOpacity>
       <MaterialCommunityIcons name={meta.icon} size={20} color="rgba(255,255,255,0.9)" />
       <StyledText weight="700" style={styles.pageTitle}>{meta.title}</StyledText>
@@ -167,8 +170,9 @@ export function MenuPageModal() {
   return (
     <Modal
       visible={!!menuPage}
-      animationType="slide"
+      animationType="fade"
       statusBarTranslucent
+      transparent={false}
       onRequestClose={closeMenuPage}
     >
       <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -201,9 +205,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.md,
-    gap: 10,
+    gap: 12,
   },
-  backBtn: { padding: 4, marginRight: 2 },
+  backBtnCircle: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center', alignItems: 'center',
+  },
   pageTitle: { flex: 1, color: '#fff', fontSize: 17 },
   headerBorder: {
     position: 'absolute', bottom: 0, left: 0, right: 0,

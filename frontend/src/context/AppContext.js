@@ -20,6 +20,11 @@ export function AppProvider({ children }) {
     toastTimeout.current = setTimeout(() => setToast(null), 3000);
   };
 
+  const dismissToast = () => {
+    if (toastTimeout.current) clearTimeout(toastTimeout.current);
+    setToast(null);
+  };
+
   const showConfirm = (title, message, onConfirm, onCancel) => {
     setConfirm({ title, message, onConfirm, onCancel });
   };
@@ -33,7 +38,7 @@ export function AppProvider({ children }) {
       value={{
         mode, toggleMode,
         sidebarOpen, openSidebar, closeSidebar,
-        toast, showToast,
+        toast, showToast, dismissToast,
         confirm, showConfirm, closeConfirm,
         menuPage, openMenuPage, closeMenuPage,
       }}

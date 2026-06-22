@@ -312,9 +312,9 @@ const styles = StyleSheet.create({
   /* ── body ── */
   body:        { flex: 1 },
   bodyContent: { paddingBottom: SPACING.md },
-  section:     { marginTop: SPACING.sm + 4, paddingHorizontal: SPACING.md },
-  sectionTitle:{ fontSize: 15, marginBottom: 6 },
-  itemsGroup:  { gap: 6 },
+  section:     { marginTop: SPACING.md, paddingHorizontal: SPACING.md },
+  sectionTitle:{ fontSize: 15, marginBottom: 8 },
+  itemsGroup:  { gap: 10 },
 
   /* ── nav item ── */
   item: {

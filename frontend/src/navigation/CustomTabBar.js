@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
+  useSharedValue, useAnimatedStyle, withSpring,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -13,19 +11,20 @@ import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
+/* ── better icons, relevant to NearHands ────────────────────── */
 const ICONS = {
-  Home:     { on: 'home-variant',    off: 'home-variant-outline' },
-  Search:   { on: 'magnify',         off: 'magnify' },
-  Messages: { on: 'message-text',    off: 'message-text-outline' },
-  Profile:  { on: 'account-circle',  off: 'account-circle-outline' },
+  Home:     { on: 'home',                  off: 'home-outline' },
+  Search:   { on: 'map-search',            off: 'map-search-outline' },
+  Messages: { on: 'forum',                 off: 'forum-outline' },
+  Profile:  { on: 'account-circle',        off: 'account-circle-outline' },
 };
 
 const INACTIVE  = '#94A3B8';
-const FAB_SIZE  = 56;
-const FAB_RISE  = 20;       // how far the FAB floats above the bar
+const FAB_SIZE  = 54;
+const FAB_RISE  = 22;
 
-/* ─── regular tab item ─────────────────────────────────────── */
-function TabItem({ route, isFocused, label, navigation }) {
+/* ── tab item: icon + label stacked vertically for ALL tabs ─── */
+function TabItem({ route, isFocused, label, navigation, pillScale }) {
   const { colors } = useTheme();
   const icons = ICONS[route.name] ?? { on: 'circle', off: 'circle-outline' };
 
@@ -35,35 +34,38 @@ function TabItem({ route, isFocused, label, navigation }) {
       onPress={() => { if (!isFocused) navigation.navigate(route.name); }}
       activeOpacity={0.75}
     >
-      <View style={styles.row}>
+      {/* icon zone — pill slides behind it */}
+      <View style={styles.iconZone}>
         <MaterialCommunityIcons
           name={isFocused ? icons.on : icons.off}
-          size={22}
+          size={20}
           color={isFocused ? '#FFFFFF' : INACTIVE}
         />
-        {isFocused && (
-          <StyledText weight="600" numberOfLines={1} style={styles.label}>
-            {label}
-          </StyledText>
-        )}
       </View>
+      {/* label always visible below icon */}
+      <StyledText
+        weight={isFocused ? '600' : '400'}
+        numberOfLines={1}
+        style={[styles.label, { color: isFocused ? '#1D9BF0' : INACTIVE }]}
+      >
+        {label}
+      </StyledText>
     </TouchableOpacity>
   );
 }
 
-/* ─── tab bar ──────────────────────────────────────────────── */
+/* ── tab bar ─────────────────────────────────────────────────── */
 export function CustomTabBar({ state, descriptors, navigation }) {
   const { colors, isDark } = useTheme();
   const { openMenuPage } = useApp();
-  const insets = useSafeAreaInsets();
+  const insets    = useSafeAreaInsets();
 
-  const [barW, setBarW]   = useState(0);
-  const firstLayout       = useRef(true);
-  const tabCount          = state.routes.length;   // 4
-  // pill occupies one of 5 equal slots (4 tabs + 1 center FAB slot)
-  const slotW             = barW > 0 ? barW / 5 : 0;
+  const [barW, setBarW] = useState(0);
+  const firstLayout     = useRef(true);
+  const tabCount        = state.routes.length;   // 4
+  const slotW           = barW > 0 ? barW / 5 : 0;  // 5 slots (4 tabs + center FAB)
 
-  // Map real tab index (0-3) to its slot position (0,1,3,4 — slot 2 is the FAB)
+  // Slot mapping: tabs 0,1 → slots 0,1; tabs 2,3 → slots 3,4; slot 2 = FAB gap
   const slotForIndex = (i) => (i < 2 ? i : i + 1);
 
   const pillX = useSharedValue(0);
@@ -71,12 +73,8 @@ export function CustomTabBar({ state, descriptors, navigation }) {
   useEffect(() => {
     if (slotW <= 0) return;
     const target = slotForIndex(state.index) * slotW;
-    if (firstLayout.current) {
-      pillX.value = target;
-      firstLayout.current = false;
-    } else {
-      pillX.value = withSpring(target, { damping: 24, stiffness: 260, mass: 0.9 });
-    }
+    if (firstLayout.current) { pillX.value = target; firstLayout.current = false; }
+    else pillX.value = withSpring(target, { damping: 24, stiffness: 260, mass: 0.9 });
   }, [state.index, slotW]);
 
   const pillStyle = useAnimatedStyle(() => ({
@@ -100,7 +98,6 @@ export function CustomTabBar({ state, descriptors, navigation }) {
     >
       {/* shadow shell */}
       <View style={[styles.shadow, { backgroundColor: barBg, shadowColor: '#1D9BF0' }]}>
-        {/* bar — overflow:hidden clips the pill */}
         <View
           style={[styles.bar, { backgroundColor: barBg }]}
           onLayout={e => setBarW(e.nativeEvent.layout.width)}
@@ -112,35 +109,29 @@ export function CustomTabBar({ state, descriptors, navigation }) {
             </Animated.View>
           )}
 
-          {/* Left 2 tabs: Home, Search */}
+          {/* Left 2: Home, Search */}
           {state.routes.slice(0, 2).map((route, i) => {
             const isFocused = state.index === i;
             const { options } = descriptors[route.key];
-            const label = typeof options.tabBarLabel === 'string'
-              ? options.tabBarLabel : options.title ?? route.name;
-            return (
-              <TabItem key={route.key} route={route} isFocused={isFocused} label={label} navigation={navigation} />
-            );
+            const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : options.title ?? route.name;
+            return <TabItem key={route.key} route={route} isFocused={isFocused} label={label} navigation={navigation} />;
           })}
 
-          {/* Center FAB placeholder — same flex as a tab slot */}
+          {/* FAB slot space */}
           <View style={styles.fabSlot} />
 
-          {/* Right 2 tabs: Messages, Profile */}
+          {/* Right 2: Messages, Profile */}
           {state.routes.slice(2).map((route, i) => {
             const realIndex = i + 2;
             const isFocused = state.index === realIndex;
             const { options } = descriptors[route.key];
-            const label = typeof options.tabBarLabel === 'string'
-              ? options.tabBarLabel : options.title ?? route.name;
-            return (
-              <TabItem key={route.key} route={route} isFocused={isFocused} label={label} navigation={navigation} />
-            );
+            const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : options.title ?? route.name;
+            return <TabItem key={route.key} route={route} isFocused={isFocused} label={label} navigation={navigation} />;
           })}
         </View>
       </View>
 
-      {/* ── PhonePe-style center FAB — floats above the bar ── */}
+      {/* PhonePe-style FAB — no shadow ─────────────────── */}
       <View style={styles.fabWrap} pointerEvents="box-none">
         <TouchableOpacity
           activeOpacity={0.85}
@@ -179,62 +170,60 @@ const styles = StyleSheet.create({
     flexDirection:   'row',
     borderRadius:    BAR_RADIUS,
     overflow:        'hidden',
-    paddingVertical: 11,   // slightly taller bar
+    paddingVertical: 7,
+    alignItems:      'center',
   },
   pill: {
-    position: 'absolute',
-    top:      5,
-    bottom:   5,
+    position:     'absolute',
+    top:          5,
+    bottom:       5,
     borderRadius: 100,
-    overflow: 'hidden',
-    zIndex:   0,
+    overflow:     'hidden',
+    zIndex:       0,
   },
+
+  // tab item: vertical stack (icon top, label bottom)
   item: {
     flex:            1,
     alignItems:      'center',
     justifyContent:  'center',
-    paddingVertical: 5,
+    paddingVertical: 4,
     zIndex:          1,
     overflow:        'hidden',
   },
-  row: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            4,
-    maxWidth:       '100%',
+  iconZone: {
+    width:          44,
+    height:         26,
+    alignItems:     'center',
+    justifyContent: 'center',
+    marginBottom:   2,
   },
   label: {
-    fontSize:   10.5,
-    color:      '#FFFFFF',
-    flexShrink: 1,
+    fontSize:      9.5,
+    textAlign:     'center',
+    letterSpacing: 0.1,
+    flexShrink:    1,
   },
 
-  /* FAB placeholder space inside bar (same weight as a tab) */
   fabSlot: { flex: 1 },
 
-  /* FAB floats above bar center */
+  // FAB — no shadow/elevation
   fabWrap: {
-    position:       'absolute',
-    left:           0,
-    right:          0,
-    // sits at top of wrapper; negative top moves it above the bar
-    top:            10 - FAB_RISE,
-    alignItems:     'center',
-    zIndex:         50,
+    position:   'absolute',
+    left:       0,
+    right:      0,
+    top:        10 - FAB_RISE,
+    alignItems: 'center',
+    zIndex:     50,
   },
   fabOuter: {
-    width:  FAB_SIZE,
-    height: FAB_SIZE,
+    width:        FAB_SIZE,
+    height:       FAB_SIZE,
     borderRadius: FAB_SIZE / 2,
-    // white ring border
     borderWidth:  3,
     borderColor:  '#FFFFFF',
-    shadowColor:  '#1D9BF0',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius:  12,
-    elevation:     14,
-    overflow:      'hidden',
+    overflow:     'hidden',
+    // intentionally no shadow/elevation
   },
   fab: {
     flex:           1,
