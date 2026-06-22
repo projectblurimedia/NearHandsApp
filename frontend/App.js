@@ -2,7 +2,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
 import {
   useFonts,
@@ -17,6 +19,8 @@ import { ThemeProvider } from './src/context/ThemeContext';
 import { AppProvider } from './src/context/AppContext';
 import { TabNavigator } from './src/navigation/TabNavigator';
 import { useTheme } from './src/hooks/useTheme';
+
+SplashScreen.preventAutoHideAsync();
 
 function AppShell() {
   const { isDark } = useTheme();
@@ -37,9 +41,13 @@ export default function App() {
     Poppins_800ExtraBold,
   });
 
-  if (!fontsLoaded) {
-    return <View style={styles.splash} />;
-  }
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -56,5 +64,4 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  splash: { flex: 1, backgroundColor: '#1D9BF0' },
 });

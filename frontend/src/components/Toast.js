@@ -26,11 +26,11 @@ export function Toast() {
 
   useEffect(() => {
     if (toast) {
-      translateY.value = withSpring(0, { damping: 15, stiffness: 200 });
-      opacity.value = withTiming(1, { duration: 200 });
+      translateY.value = withSpring(0, { damping: 18, stiffness: 300 });
+      opacity.value = withTiming(1, { duration: 140 });
     } else {
-      translateY.value = withTiming(-80, { duration: 250 });
-      opacity.value = withTiming(0, { duration: 200 });
+      translateY.value = withTiming(-80, { duration: 180 });
+      opacity.value = withTiming(0, { duration: 150 });
     }
   }, [toast]);
 

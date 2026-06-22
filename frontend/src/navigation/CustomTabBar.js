@@ -4,38 +4,57 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  interpolateColor,
+  useDerivedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyledText } from '../components/StyledText';
 import { useTheme } from '../hooks/useTheme';
-import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
+import { GRADIENT_VIVID, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
-const TAB_CONFIG = {
-  Home:     { active: 'home',         inactive: 'home-outline' },
-  Search:   { active: 'search',       inactive: 'search-outline' },
-  Problems: { active: 'alert-circle', inactive: 'alert-circle-outline' },
-  Earnings: { active: 'wallet',       inactive: 'wallet-outline' },
-  Profile:  { active: 'person',       inactive: 'person-outline' },
+const TABS = {
+  Home:     { on: 'home',          off: 'home-outline' },
+  Search:   { on: 'search',        off: 'search-outline' },
+  Problems: { on: 'alert-circle',  off: 'alert-circle-outline' },
+  Earnings: { on: 'wallet',        off: 'wallet-outline' },
+  Profile:  { on: 'person',        off: 'person-outline' },
 };
 
 function TabItem({ route, isFocused, label, navigation }) {
   const { colors } = useTheme();
-  const scale = useSharedValue(1);
+  const press = useSharedValue(1);
+  const active = useSharedValue(isFocused ? 1 : 0);
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+  // sync active value when tab changes
+  React.useEffect(() => {
+    active.value = withTiming(isFocused ? 1 : 0, { duration: 160 });
+  }, [isFocused]);
+
+  const iconScale = useAnimatedStyle(() => ({
+    transform: [{ scale: press.value }],
+  }));
+
+  const pillStyle = useAnimatedStyle(() => ({
+    opacity: active.value,
+    transform: [{ scale: 0.7 + active.value * 0.3 }],
+  }));
+
+  const labelStyle = useAnimatedStyle(() => ({
+    opacity: active.value,
+    transform: [{ translateY: (1 - active.value) * 4 }],
   }));
 
   const handlePress = () => {
-    scale.value = withSpring(0.88, { damping: 14 }, () => {
-      scale.value = withSpring(1, { damping: 12 });
+    press.value = withSpring(0.82, { damping: 18, stiffness: 400 }, () => {
+      press.value = withSpring(1, { damping: 14, stiffness: 320 });
     });
     if (!isFocused) navigation.navigate(route.name);
   };
 
-  const icons = TAB_CONFIG[route.name] ?? { active: 'ellipse', inactive: 'ellipse-outline' };
+  const icons = TABS[route.name] ?? { on: 'ellipse', off: 'ellipse-outline' };
 
   return (
     <TouchableOpacity
@@ -43,24 +62,33 @@ function TabItem({ route, isFocused, label, navigation }) {
       style={styles.tabItem}
       activeOpacity={1}
     >
-      <Animated.View style={[styles.tabInner, animStyle]}>
-        {isFocused ? (
+      <Animated.View style={[styles.iconWrap, iconScale]}>
+        {/* Gradient pill behind icon when active */}
+        <Animated.View style={[styles.pillBg, pillStyle]}>
           <LinearGradient
-            colors={GRADIENT}
+            colors={GRADIENT_VIVID}
             start={GRADIENT_START}
             end={GRADIENT_END}
-            style={styles.activePill}
-          >
-            <Ionicons name={icons.active} size={17} color="#fff" />
-            <StyledText weight="700" style={styles.activeLabel} numberOfLines={1}>
-              {label}
-            </StyledText>
-          </LinearGradient>
-        ) : (
-          <View style={styles.inactiveItem}>
-            <Ionicons name={icons.inactive} size={22} color={colors.subtext} />
-          </View>
-        )}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+
+        <Ionicons
+          name={isFocused ? icons.on : icons.off}
+          size={22}
+          color={isFocused ? '#ffffff' : colors.subtext}
+        />
+      </Animated.View>
+
+      {/* Label — fades + slides in when active */}
+      <Animated.View style={labelStyle}>
+        <StyledText
+          weight="600"
+          style={[styles.label, { color: '#1CB5E0' }]}
+          numberOfLines={1}
+        >
+          {label}
+        </StyledText>
       </Animated.View>
     </TouchableOpacity>
   );
@@ -84,8 +112,8 @@ export function CustomTabBar({ state, descriptors, navigation }) {
         style={[
           styles.bar,
           {
-            backgroundColor: isDark ? '#1a2235' : '#ffffff',
-            shadowColor: isDark ? '#1D9BF0' : '#0D3FBF',
+            backgroundColor: isDark ? '#111827' : '#ffffff',
+            shadowColor: isDark ? '#1CB5E0' : '#203A43',
           },
         ]}
       >
@@ -114,46 +142,41 @@ export function CustomTabBar({ state, descriptors, navigation }) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
+    paddingHorizontal: 14,
+    paddingTop: 10,
   },
   bar: {
     flexDirection: 'row',
-    borderRadius: 30,
-    paddingVertical: 7,
-    paddingHorizontal: 8,
+    borderRadius: 26,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 18,
     alignItems: 'center',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.14,
-    shadowRadius: 18,
-    elevation: 16,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 3,
   },
-  tabInner: {
+  iconWrap: {
+    width: 46,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  activePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: 22,
+  pillBg: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 18,
+    overflow: 'hidden',
   },
-  activeLabel: {
-    color: '#fff',
-    fontSize: 11,
-    maxWidth: 60,
-  },
-  inactiveItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+  label: {
+    fontSize: 9.5,
+    letterSpacing: 0.1,
   },
 });

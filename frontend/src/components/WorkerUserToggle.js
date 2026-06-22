@@ -13,8 +13,8 @@ export function WorkerUserToggle() {
 
   useEffect(() => {
     offset.value = withSpring(mode === 'user' ? 2 : PILL_WIDTH - THUMB_WIDTH - 2, {
-      damping: 18,
-      stiffness: 180,
+      damping: 22,
+      stiffness: 320,
     });
   }, [mode]);
 
@@ -26,16 +26,10 @@ export function WorkerUserToggle() {
     <TouchableOpacity activeOpacity={0.85} onPress={toggleMode} style={styles.pill}>
       <Animated.View style={[styles.thumb, thumbStyle]} />
       <View style={styles.labels}>
-        <StyledText
-          weight="600"
-          style={[styles.label, mode === 'user' && styles.labelActive]}
-        >
+        <StyledText weight="600" style={[styles.label, mode === 'user' && styles.labelActive]}>
           User
         </StyledText>
-        <StyledText
-          weight="600"
-          style={[styles.label, mode === 'worker' && styles.labelActive]}
-        >
+        <StyledText weight="600" style={[styles.label, mode === 'worker' && styles.labelActive]}>
           Worker
         </StyledText>
       </View>
@@ -73,6 +67,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   labelActive: {
-    color: '#1D9BF0',
+    color: '#203A43',
   },
 });

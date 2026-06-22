@@ -17,21 +17,21 @@ import { SPACING, RADIUS, SIDEBAR_WIDTH } from '../constants/layout';
 
 const NAV_SECTIONS = [
   {
-    title: 'Navigate',
+    key: 'nav',
     items: [
-      { key: 'home', label: 'Home', icon: 'home', color: '#1D9BF0' },
-      { key: 'search', label: 'Search Workers', icon: 'search', color: '#8b5cf6' },
-      { key: 'problems', label: 'Problems', icon: 'alert-circle', color: '#f59e0b' },
-      { key: 'earnings', label: 'Wallet & Earnings', icon: 'wallet', color: '#10b981' },
-      { key: 'profile', label: 'My Profile', icon: 'person-circle', color: '#ec4899' },
+      { key: 'home',     label: 'Home',              icon: 'home',               color: '#1CB5E0' },
+      { key: 'search',   label: 'Search Workers',    icon: 'search',             color: '#8b5cf6' },
+      { key: 'problems', label: 'Problems',          icon: 'alert-circle',       color: '#f59e0b' },
+      { key: 'earnings', label: 'Wallet & Earnings', icon: 'wallet',             color: '#10b981' },
+      { key: 'profile',  label: 'My Profile',        icon: 'person-circle',      color: '#ec4899' },
     ],
   },
   {
-    title: 'Support',
+    key: 'more',
     items: [
-      { key: 'settings', label: 'Settings', icon: 'settings', color: '#6b7280' },
-      { key: 'help', label: 'Help & Support', icon: 'help-circle', color: '#06b6d4' },
-      { key: 'about', label: 'About NearHands', icon: 'information-circle', color: '#3b82f6' },
+      { key: 'settings', label: 'Settings',        icon: 'settings',          color: '#64748b' },
+      { key: 'help',     label: 'Help & Support',  icon: 'help-circle',       color: '#06b6d4' },
+      { key: 'about',    label: 'About NearHands', icon: 'information-circle', color: '#3b82f6' },
     ],
   },
 ];
@@ -39,17 +39,17 @@ const NAV_SECTIONS = [
 function NavItem({ item, onPress, colors }) {
   return (
     <TouchableOpacity
-      style={[styles.navItem, { backgroundColor: colors.background + 'aa' }]}
+      style={[styles.navItem, { backgroundColor: colors.inputBg }]}
       onPress={onPress}
-      activeOpacity={0.65}
+      activeOpacity={0.6}
     >
-      <View style={[styles.navIconBox, { backgroundColor: item.color + '1A' }]}>
+      <View style={[styles.iconBox, { backgroundColor: item.color + '20' }]}>
         <Ionicons name={item.icon} size={18} color={item.color} />
       </View>
       <StyledText weight="500" style={[styles.navLabel, { color: colors.text }]}>
         {item.label}
       </StyledText>
-      <Ionicons name="chevron-forward" size={13} color={colors.border} />
+      <Ionicons name="chevron-forward" size={12} color={colors.border} />
     </TouchableOpacity>
   );
 }
@@ -59,22 +59,20 @@ export function Sidebar() {
   const { colors, isDark, toggleTheme } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // Slides in from RIGHT: starts off-screen (translateX = SIDEBAR_WIDTH), opens to 0
   const translateX = useSharedValue(SIDEBAR_WIDTH);
   const overlayOpacity = useSharedValue(0);
 
   useEffect(() => {
     translateX.value = withTiming(sidebarOpen ? 0 : SIDEBAR_WIDTH, {
-      duration: 300,
-      easing: Easing.out(Easing.cubic),
+      duration: 200,
+      easing: Easing.out(Easing.quad),
     });
-    overlayOpacity.value = withTiming(sidebarOpen ? 1 : 0, { duration: 300 });
+    overlayOpacity.value = withTiming(sidebarOpen ? 1 : 0, { duration: 200 });
   }, [sidebarOpen]);
 
   const drawerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
-
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
   }));
@@ -94,99 +92,94 @@ export function Sidebar() {
       </Animated.View>
 
       <Animated.View style={[styles.drawer, { backgroundColor: colors.card }, drawerStyle]}>
-        {/* Dark gradient header — always dark for contrast */}
+
+        {/* ── Header: user info only, no app logo ─────────── */}
         <LinearGradient
           colors={SIDEBAR_HEADER_GRADIENT}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + 16 }]}
+          style={[styles.header, { paddingTop: insets.top + 18 }]}
         >
-          {/* Top row: app logo + close button */}
-          <View style={styles.headerTopRow}>
-            <View style={styles.logoRow}>
-              <View style={styles.logoBox}>
-                <StyledText weight="800" style={styles.logoLetter}>N</StyledText>
-              </View>
-              <StyledText weight="700" style={styles.appName}>NearHands</StyledText>
+          {/* Close button row */}
+          <TouchableOpacity
+            onPress={closeSidebar}
+            hitSlop={14}
+            style={styles.closeBtn}
+          >
+            <View style={styles.closeBtnCircle}>
+              <Ionicons name="close" size={14} color="rgba(255,255,255,0.9)" />
             </View>
-            <TouchableOpacity onPress={closeSidebar} hitSlop={12} style={styles.closeBtn}>
-              <View style={styles.closeBtnCircle}>
-                <Ionicons name="close" size={15} color="#fff" />
-              </View>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
 
-          {/* User info card */}
+          {/* User card */}
           <View style={styles.userCard}>
-            <View style={styles.avatarCircle}>
-              <Ionicons name="person" size={26} color="#1D9BF0" />
+            <View style={styles.avatar}>
+              <Ionicons name="person" size={28} color="#1CB5E0" />
             </View>
             <View style={{ flex: 1 }}>
               <StyledText weight="700" style={styles.userName}>Guest User</StyledText>
               <StyledText weight="400" style={styles.userSub}>Hyderabad, India</StyledText>
             </View>
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={14} color="#10b981" />
-              <StyledText weight="500" style={styles.verifiedText}>Verified</StyledText>
-            </View>
+          </View>
+
+          {/* Quick stats row */}
+          <View style={styles.statsRow}>
+            {[
+              { label: 'Wallet', value: '₹280' },
+              { label: 'Reveals', value: '28' },
+              { label: 'Rating', value: '4.8 ★' },
+            ].map(s => (
+              <View key={s.label} style={styles.statChip}>
+                <StyledText weight="700" style={styles.statValue}>{s.value}</StyledText>
+                <StyledText weight="400" style={styles.statLabel}>{s.label}</StyledText>
+              </View>
+            ))}
           </View>
         </LinearGradient>
 
-        {/* Scrollable body */}
+        {/* ── Nav body ─────────────────────────────────────── */}
         <ScrollView
           style={styles.body}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.bodyContent}
         >
-          {NAV_SECTIONS.map(section => (
-            <View key={section.title} style={styles.section}>
-              <StyledText weight="600" style={[styles.sectionLabel, { color: colors.subtext }]}>
-                {section.title}
-              </StyledText>
+          {NAV_SECTIONS.map((section, si) => (
+            <View key={section.key} style={si > 0 && styles.sectionGap}>
               {section.items.map(item => (
                 <NavItem key={item.key} item={item} onPress={closeSidebar} colors={colors} />
               ))}
             </View>
           ))}
 
-          {/* Appearance toggle */}
-          <View style={styles.section}>
-            <StyledText weight="600" style={[styles.sectionLabel, { color: colors.subtext }]}>
-              Appearance
-            </StyledText>
-            <View style={[styles.toggleRow, { backgroundColor: colors.background + 'aa' }]}>
-              <View style={[styles.navIconBox, { backgroundColor: isDark ? '#fef9c31A' : '#1f29371A' }]}>
-                <Ionicons
-                  name={isDark ? 'moon' : 'sunny'}
-                  size={18}
-                  color={isDark ? '#fbbf24' : '#f59e0b'}
-                />
-              </View>
-              <StyledText weight="500" style={[styles.navLabel, { color: colors.text }]}>
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </StyledText>
-              <Switch
-                value={isDark}
-                onValueChange={toggleTheme}
-                trackColor={{ false: '#d1d5db', true: '#1D9BF0' }}
-                thumbColor="#ffffff"
-              />
+          {/* Dark / Light mode toggle */}
+          <View style={[styles.sectionGap, styles.toggleWrap, { backgroundColor: colors.inputBg }]}>
+            <View style={[styles.iconBox, { backgroundColor: isDark ? '#fbbf2420' : '#f59e0b20' }]}>
+              <Ionicons name={isDark ? 'moon' : 'sunny'} size={18} color={isDark ? '#fbbf24' : '#f59e0b'} />
             </View>
+            <StyledText weight="500" style={[styles.navLabel, { color: colors.text }]}>
+              {isDark ? 'Dark Mode' : 'Light Mode'}
+            </StyledText>
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: '#d1d5db', true: '#1CB5E0' }}
+              thumbColor="#ffffff"
+            />
           </View>
         </ScrollView>
 
-        {/* Logout at bottom */}
+        {/* ── Logout ───────────────────────────────────────── */}
         <TouchableOpacity
-          style={[styles.logoutRow, { borderTopColor: colors.border, paddingBottom: insets.bottom + 8 }]}
+          style={[styles.logoutRow, { borderTopColor: colors.border, paddingBottom: insets.bottom + 10 }]}
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          <View style={[styles.navIconBox, { backgroundColor: '#ef44441A' }]}>
+          <View style={[styles.iconBox, { backgroundColor: '#ef444420' }]}>
             <Ionicons name="log-out-outline" size={18} color="#ef4444" />
           </View>
           <StyledText weight="600" style={styles.logoutText}>Log Out</StyledText>
-          <Ionicons name="chevron-forward" size={13} color="#ef444460" />
         </TouchableOpacity>
+
       </Animated.View>
     </>
   );
@@ -195,7 +188,7 @@ export function Sidebar() {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.52)',
     zIndex: 100,
   },
   drawer: {
@@ -207,8 +200,8 @@ const styles = StyleSheet.create({
     zIndex: 101,
     shadowColor: '#000',
     shadowOffset: { width: -6, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
     elevation: 24,
     overflow: 'hidden',
   },
@@ -216,113 +209,87 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.md + 4,
   },
-  headerTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  closeBtn: {
+    alignSelf: 'flex-end',
     marginBottom: SPACING.md,
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logoBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoLetter: {
-    color: '#fff',
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  appName: {
-    color: '#fff',
-    fontSize: 15,
-    letterSpacing: 0.3,
-  },
-  closeBtn: {
-    padding: 2,
-  },
   closeBtnCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.16)',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: 'rgba(255,255,255,0.22)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
+    gap: 12,
+    marginBottom: SPACING.md,
   },
-  avatarCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   userName: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 15,
   },
   userSub: {
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.55)',
     fontSize: 11,
     marginTop: 2,
   },
-  verifiedBadge: {
+  statsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(16,185,129,0.15)',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
+    gap: 6,
   },
-  verifiedText: {
-    color: '#10b981',
-    fontSize: 10,
+  statChip: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: RADIUS.md,
+    paddingVertical: 7,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  statValue: {
+    color: '#fff',
+    fontSize: 13,
+  },
+  statLabel: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 9,
+    marginTop: 1,
   },
   body: {
     flex: 1,
   },
   bodyContent: {
-    paddingTop: SPACING.xs,
-    paddingBottom: SPACING.md,
-  },
-  section: {
     paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm + 2,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.md,
+    gap: 4,
   },
-  sectionLabel: {
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: SPACING.xs,
-    marginLeft: 2,
+  sectionGap: {
+    marginTop: SPACING.sm,
   },
   navItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
-    paddingVertical: 10,
-    paddingHorizontal: SPACING.sm,
-    borderRadius: RADIUS.md,
-    marginBottom: 2,
+    gap: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.lg,
+    marginBottom: 3,
   },
-  navIconBox: {
+  iconBox: {
     width: 34,
     height: 34,
     borderRadius: RADIUS.md,
@@ -333,18 +300,19 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
   },
-  toggleRow: {
+  toggleWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
-    paddingVertical: 10,
-    paddingHorizontal: SPACING.sm,
-    borderRadius: RADIUS.md,
+    gap: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.lg,
+    marginTop: SPACING.sm,
   },
   logoutRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
+    gap: 12,
     paddingHorizontal: SPACING.md + 4,
     paddingTop: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,

@@ -9,16 +9,16 @@ import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 export function ConfirmationModal() {
   const { confirm, closeConfirm } = useApp();
   const { colors } = useTheme();
-  const scale = useSharedValue(0.85);
+  const scale = useSharedValue(0.88);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
     if (confirm) {
-      scale.value = withSpring(1, { damping: 16, stiffness: 200 });
-      opacity.value = withSpring(1, { damping: 16, stiffness: 200 });
+      scale.value = withSpring(1, { damping: 20, stiffness: 300 });
+      opacity.value = withSpring(1, { damping: 20, stiffness: 300 });
     } else {
-      scale.value = withSpring(0.85, { damping: 16, stiffness: 200 });
-      opacity.value = withSpring(0, { damping: 16, stiffness: 200 });
+      scale.value = withSpring(0.88, { damping: 20, stiffness: 300 });
+      opacity.value = withSpring(0, { damping: 20, stiffness: 300 });
     }
   }, [confirm]);
 
@@ -27,15 +27,8 @@ export function ConfirmationModal() {
     opacity: opacity.value,
   }));
 
-  const handleConfirm = () => {
-    confirm?.onConfirm?.();
-    closeConfirm();
-  };
-
-  const handleCancel = () => {
-    confirm?.onCancel?.();
-    closeConfirm();
-  };
+  const handleConfirm = () => { confirm?.onConfirm?.(); closeConfirm(); };
+  const handleCancel = () => { confirm?.onCancel?.(); closeConfirm(); };
 
   return (
     <Modal
@@ -55,15 +48,16 @@ export function ConfirmationModal() {
               {confirm?.message}
             </StyledText>
             <View style={styles.actions}>
-              <TouchableOpacity style={[styles.btn, styles.cancelBtn, { borderColor: colors.border }]} onPress={handleCancel}>
+              <TouchableOpacity
+                style={[styles.btn, styles.cancelBtn, { borderColor: colors.border }]}
+                onPress={handleCancel}
+              >
                 <StyledText weight="600" style={[styles.cancelText, { color: colors.subtext }]}>
                   Cancel
                 </StyledText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.btn, styles.confirmBtn]} onPress={handleConfirm}>
-                <StyledText weight="600" style={styles.confirmText}>
-                  Confirm
-                </StyledText>
+                <StyledText weight="600" style={styles.confirmText}>Confirm</StyledText>
               </TouchableOpacity>
             </View>
           </Pressable>
@@ -86,36 +80,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
   },
-  title: {
-    fontSize: 18,
-    marginBottom: SPACING.sm,
-  },
-  message: {
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: SPACING.lg,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-  },
-  btn: {
-    flex: 1,
-    paddingVertical: SPACING.sm + 2,
-    borderRadius: RADIUS.lg,
-    alignItems: 'center',
-  },
-  cancelBtn: {
-    borderWidth: 1.5,
-  },
-  cancelText: {
-    fontSize: 14,
-  },
-  confirmBtn: {
-    backgroundColor: '#1D9BF0',
-  },
-  confirmText: {
-    fontSize: 14,
-    color: '#fff',
-  },
+  title: { fontSize: 18, marginBottom: SPACING.sm },
+  message: { fontSize: 14, lineHeight: 22, marginBottom: SPACING.lg },
+  actions: { flexDirection: 'row', gap: SPACING.sm },
+  btn: { flex: 1, paddingVertical: SPACING.sm + 2, borderRadius: RADIUS.lg, alignItems: 'center' },
+  cancelBtn: { borderWidth: 1.5 },
+  cancelText: { fontSize: 14 },
+  confirmBtn: { backgroundColor: '#1CB5E0' },
+  confirmText: { fontSize: 14, color: '#fff' },
 });
