@@ -33,10 +33,10 @@ function PageHeader({ page, onClose }) {
       end={GRADIENT_END}
       style={[styles.pageHeader, { paddingTop: insets.top + 14 }]}
     >
-      {/* CampuSphere-style circular back button */}
+      {/* Vegetable-Marketing-style squircle back button */}
       <TouchableOpacity onPress={onClose} hitSlop={12}>
-        <View style={styles.backBtnCircle}>
-          <Ionicons name="arrow-back" size={20} color="#fff" />
+        <View style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={20} color="#fff" />
         </View>
       </TouchableOpacity>
       <MaterialCommunityIcons name={meta.icon} size={20} color="rgba(255,255,255,0.9)" />
@@ -207,9 +207,12 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
     gap: 12,
   },
-  backBtnCircle: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  backBtn: {
+    width: 40, height: 40,
+    borderRadius: 10,                          // squircle — Vegetable Marketing style
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.4)',
     justifyContent: 'center', alignItems: 'center',
   },
   pageTitle: { flex: 1, color: '#fff', fontSize: 17 },

@@ -42,11 +42,11 @@ function TabItem({ route, isFocused, label, navigation, pillScale }) {
           color={isFocused ? '#FFFFFF' : INACTIVE}
         />
       </View>
-      {/* label always visible below icon */}
+      {/* label — white when active (matches icon on gradient pill) */}
       <StyledText
         weight={isFocused ? '600' : '400'}
         numberOfLines={1}
-        style={[styles.label, { color: isFocused ? '#1D9BF0' : INACTIVE }]}
+        style={[styles.label, { color: isFocused ? '#FFFFFF' : INACTIVE }]}
       >
         {label}
       </StyledText>
@@ -193,10 +193,10 @@ const styles = StyleSheet.create({
   },
   iconZone: {
     width:          44,
-    height:         26,
+    height:         24,
     alignItems:     'center',
     justifyContent: 'center',
-    marginBottom:   2,
+    marginBottom:   1,       // reduced gap
   },
   label: {
     fontSize:      9.5,
