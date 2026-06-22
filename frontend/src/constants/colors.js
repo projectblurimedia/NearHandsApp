@@ -28,18 +28,17 @@ export const DARK = {
   info: '#1D9BF0',
 };
 
-// Deep ocean blue → bright sky blue (diagonal) — rich, vibrant, premium
-export const GRADIENT = ['#0F2027', '#203A43', '#2C5364'];
-export const GRADIENT_VIVID = ['#1CB5E0', '#000851'];   // for tab active pills
+// Brand gradient: #1D9BF0 (bright blue) → #264B96 (deep navy)
+export const GRADIENT = ['#1D9BF0', '#264B96'];
 export const GRADIENT_START = { x: 0, y: 0 };
 export const GRADIENT_END = { x: 1, y: 1 };
 
-// Sidebar header — stays dark regardless of theme
+// Sidebar header stays dark
 export const SIDEBAR_HEADER_GRADIENT = ['#0F2027', '#203A43', '#2C5364'];
 
 export const TOAST_COLORS = {
   success: '#10b981',
   error: '#ef4444',
   warning: '#f59e0b',
-  info: '#1CB5E0',
+  info: '#1D9BF0',
 };
