@@ -36,7 +36,7 @@ function PageHeader({ page, onClose }) {
       {/* Vegetable-Marketing-style squircle back button */}
       <TouchableOpacity onPress={onClose} hitSlop={12}>
         <View style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={20} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color="#fff" />
         </View>
       </TouchableOpacity>
       <MaterialCommunityIcons name={meta.icon} size={20} color="rgba(255,255,255,0.9)" />
@@ -208,11 +208,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   backBtn: {
-    width: 40, height: 40,
-    borderRadius: 10,                          // squircle — Vegetable Marketing style
+    width: 42, height: 42,
+    borderRadius: 14,                          // well-rounded squircle
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: 'rgba(255,255,255,0.45)',
     justifyContent: 'center', alignItems: 'center',
   },
   pageTitle: { flex: 1, color: '#fff', fontSize: 17 },

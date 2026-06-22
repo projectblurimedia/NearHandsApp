@@ -144,7 +144,7 @@ export function CustomTabBar({ state, descriptors, navigation }) {
             end={GRADIENT_END}
             style={styles.fab}
           >
-            <MaterialCommunityIcons name="alert-circle-outline" size={26} color="#fff" />
+            <MaterialCommunityIcons name="alert-circle-outline" size={30} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     height:         24,
     alignItems:     'center',
     justifyContent: 'center',
-    marginBottom:   1,       // reduced gap
+    marginBottom:   0,       // no gap — label touches icon
   },
   label: {
     fontSize:      9.5,

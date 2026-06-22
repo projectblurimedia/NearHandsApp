@@ -16,7 +16,7 @@ import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 import { SPACING, RADIUS } from '../constants/layout';
 
 const { width: SW } = Dimensions.get('window');
-const DRAWER_WIDTH = SW * 0.85;
+const DRAWER_WIDTH = SW * 0.78;
 
 /* ── only non-tab items live in the sidebar ─────────────────── */
 const SECTIONS = [
