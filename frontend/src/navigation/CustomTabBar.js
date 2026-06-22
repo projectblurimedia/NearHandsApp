@@ -6,95 +6,75 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyledText } from '../components/StyledText';
 import { useTheme } from '../hooks/useTheme';
-import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
-// MaterialCommunityIcons = softer, rounder, more modern look
+// MaterialCommunityIcons — rounded, soft, modern
 const TABS = {
-  Home:     { on: 'home-variant',         off: 'home-variant-outline' },
-  Search:   { on: 'magnify',              off: 'magnify' },
-  Problems: { on: 'bell-badge',           off: 'bell-outline' },
-  Earnings: { on: 'wallet',               off: 'wallet-outline' },
-  Profile:  { on: 'account-circle',       off: 'account-circle-outline' },
+  Home:     { on: 'home-variant',      off: 'home-variant-outline' },
+  Search:   { on: 'magnify',           off: 'magnify' },
+  Problems: { on: 'bell-badge',        off: 'bell-outline' },
+  Earnings: { on: 'wallet',            off: 'wallet-outline' },
+  Profile:  { on: 'account-circle',    off: 'account-circle-outline' },
 };
 
-function TabItem({ route, isFocused, label, navigation }) {
-  const { colors } = useTheme();
+const ACTIVE_COLOR   = '#1D9BF0';
+const INACTIVE_COLOR = '#9CA3AF';
 
-  // Pill: animates from 0 → 1 (scale + opacity) when tab becomes active
-  const pillProgress = useSharedValue(isFocused ? 1 : 0);
+function TabItem({ route, isFocused, label, navigation, isDark }) {
+  // Pill: tinted background that scales in when active
+  const pillScale   = useSharedValue(isFocused ? 1 : 0.55);
+  const pillOpacity = useSharedValue(isFocused ? 1 : 0);
+  // Bounce on press
+  const bounce = useSharedValue(1);
 
   useEffect(() => {
-    pillProgress.value = withSpring(isFocused ? 1 : 0, {
-      damping: 18,
-      stiffness: 280,
-    });
+    pillScale.value   = withSpring(isFocused ? 1 : 0.55, { damping: 18, stiffness: 300 });
+    pillOpacity.value = withTiming(isFocused ? 1 : 0, { duration: 160 });
   }, [isFocused]);
 
   const pillStyle = useAnimatedStyle(() => ({
-    opacity: pillProgress.value,
-    transform: [
-      { scaleX: 0.6 + pillProgress.value * 0.4 },
-      { scaleY: 0.7 + pillProgress.value * 0.3 },
-    ],
+    opacity: pillOpacity.value,
+    transform: [{ scaleX: pillScale.value }, { scaleY: pillScale.value }],
   }));
 
-  const iconColor = isFocused ? '#ffffff' : colors.subtext;
-
-  // Press bounce
-  const bounce = useSharedValue(1);
   const bounceStyle = useAnimatedStyle(() => ({
     transform: [{ scale: bounce.value }],
   }));
 
   const handlePress = () => {
-    bounce.value = withSpring(0.84, { damping: 16, stiffness: 420 }, () => {
-      bounce.value = withSpring(1, { damping: 13, stiffness: 340 });
+    bounce.value = withSpring(0.84, { damping: 14, stiffness: 420 }, () => {
+      bounce.value = withSpring(1,    { damping: 13, stiffness: 340 });
     });
     if (!isFocused) navigation.navigate(route.name);
   };
 
   const icons = TABS[route.name] ?? { on: 'circle', off: 'circle-outline' };
 
+  // Pill bg: low-opacity brand blue — icon color brand blue = visible in both modes
+  const pillBg = isDark ? 'rgba(29,155,240,0.24)' : 'rgba(29,155,240,0.13)';
+
   return (
-    <TouchableOpacity
-      onPress={handlePress}
-      style={styles.tabItem}
-      activeOpacity={1}
-    >
+    <TouchableOpacity onPress={handlePress} style={styles.item} activeOpacity={1}>
       <Animated.View style={[styles.itemInner, bounceStyle]}>
 
-        {/* Icon container with pill underneath */}
+        {/* Icon + tinted pill indicator */}
         <View style={styles.iconZone}>
-          {/* Gradient pill — behind icon, animates in/out */}
-          <Animated.View style={[styles.pill, pillStyle]}>
-            <LinearGradient
-              colors={GRADIENT}
-              start={GRADIENT_START}
-              end={GRADIENT_END}
-              style={StyleSheet.absoluteFill}
-            />
-          </Animated.View>
-
+          <Animated.View style={[styles.pill, { backgroundColor: pillBg }, pillStyle]} />
           <MaterialCommunityIcons
             name={isFocused ? icons.on : icons.off}
             size={24}
-            color={iconColor}
+            color={isFocused ? ACTIVE_COLOR : INACTIVE_COLOR}
           />
         </View>
 
-        {/* Label always visible — color changes */}
+        {/* Label — always visible, always below icon */}
         <StyledText
           weight={isFocused ? '600' : '400'}
-          style={[
-            styles.label,
-            { color: isFocused ? '#1D9BF0' : colors.subtext },
-          ]}
           numberOfLines={1}
+          style={[styles.label, { color: isFocused ? ACTIVE_COLOR : INACTIVE_COLOR }]}
         >
           {label}
         </StyledText>
@@ -122,7 +102,7 @@ export function CustomTabBar({ state, descriptors, navigation }) {
         style={[
           styles.bar,
           {
-            backgroundColor: isDark ? '#111827' : '#ffffff',
+            backgroundColor: isDark ? '#111827' : '#FFFFFF',
             shadowColor: '#1D9BF0',
           },
         ]}
@@ -142,6 +122,7 @@ export function CustomTabBar({ state, descriptors, navigation }) {
               isFocused={isFocused}
               label={label}
               navigation={navigation}
+              isDark={isDark}
             />
           );
         })}
@@ -152,22 +133,22 @@ export function CustomTabBar({ state, descriptors, navigation }) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingTop: 8,
   },
   bar: {
     flexDirection: 'row',
-    borderRadius: 28,
+    borderRadius: 30,
     paddingVertical: 10,
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
     alignItems: 'center',
-    // Glowing blue shadow
-    shadowOffset: { width: 0, height: -4 },
+    // Glowing shadow — user approved
+    shadowOffset:  { width: 0, height: -4 },
     shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 20,
+    shadowRadius:  24,
+    elevation:     20,
   },
-  tabItem: {
+  item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -175,25 +156,24 @@ const styles = StyleSheet.create({
   itemInner: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 2,
   },
   iconZone: {
-    width: 50,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
+    width:        52,
+    height:       34,
+    borderRadius: 17,
+    alignItems:   'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    marginBottom: 3,
+    marginBottom: 4,
+    overflow:     'hidden',
   },
   pill: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 18,
-    overflow: 'hidden',
+    borderRadius: 17,
   },
   label: {
-    fontSize: 10,
+    fontSize:      10,
     letterSpacing: 0.1,
-    textAlign: 'center',
+    textAlign:     'center',
+    maxWidth:      64,
   },
 });
