@@ -144,7 +144,7 @@ export function CustomTabBar({ state, descriptors, navigation }) {
             end={GRADIENT_END}
             style={styles.fab}
           >
-            <MaterialCommunityIcons name="alert-circle-outline" size={30} color="#fff" />
+            <MaterialCommunityIcons name="flag-variant" size={28} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
       </View>

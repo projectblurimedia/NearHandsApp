@@ -1,8 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
-import {
-  Animated, PanResponder, ScrollView,
-  View, StyleSheet, ActivityIndicator,
-} from 'react-native';
+import { Animated, PanResponder, View, StyleSheet, ActivityIndicator } from 'react-native';
+// RNGH ScrollView integrates with JS PanResponder on Android (RN native ScrollView does not)
+import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { StyledText } from './StyledText';
 import { useTheme } from '../hooks/useTheme';

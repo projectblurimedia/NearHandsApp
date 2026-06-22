@@ -148,11 +148,8 @@ export function Sidebar() {
       statusBarTranslucent
       onRequestClose={closeSidebar}
     >
-      {/* full-screen overlay — covers tab bar too */}
-      <Animated.View
-        style={[styles.overlay, overlayStyle]}
-        pointerEvents={sidebarOpen ? 'auto' : 'none'}
-      >
+      {/* full-screen overlay — covers tab bar too; always auto so tap closes drawer */}
+      <Animated.View style={[styles.overlay, overlayStyle]} pointerEvents="auto">
         <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar} />
       </Animated.View>
 
