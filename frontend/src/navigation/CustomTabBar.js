@@ -13,36 +13,36 @@ import { StyledText } from '../components/StyledText';
 import { useTheme } from '../hooks/useTheme';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
-/* ─── icon config (soft MaterialCommunity icons) ──────────────────── */
 const ICONS = {
-  Home:     { on: 'home-variant',         off: 'home-variant-outline' },
-  Search:   { on: 'magnify',              off: 'magnify' },
-  Problems: { on: 'bell-badge',           off: 'bell-outline' },
-  Earnings: { on: 'wallet',               off: 'wallet-outline' },
-  Profile:  { on: 'account-circle',       off: 'account-circle-outline' },
+  Home:     { on: 'home-variant',      off: 'home-variant-outline' },
+  Search:   { on: 'magnify',           off: 'magnify' },
+  Problems: { on: 'bell-badge',        off: 'bell-outline' },
+  Earnings: { on: 'wallet',            off: 'wallet-outline' },
+  Profile:  { on: 'account-circle',    off: 'account-circle-outline' },
 };
 
 const INACTIVE = '#94A3B8';
 
 /* ─── single tab item ─────────────────────────────────────────────── */
 function TabItem({ route, isFocused, label, navigation }) {
-  const bounce      = useSharedValue(1);
-  const labelOp     = useSharedValue(isFocused ? 1 : 0);
-  const iconScale   = useSharedValue(isFocused ? 1.08 : 1);
+  // label slides in (maxWidth 0 → 60) and fades in
+  const labelW  = useSharedValue(isFocused ? 60 : 0);
+  const labelOp = useSharedValue(isFocused ? 1  : 0);
+  // press bounce
+  const bounce  = useSharedValue(1);
 
   useEffect(() => {
-    labelOp.value   = withTiming(isFocused ? 1 : 0,    { duration: 200 });
-    iconScale.value = withSpring(isFocused ? 1.08 : 1, { damping: 18, stiffness: 280 });
+    labelW.value  = withSpring(isFocused ? 60 : 0, { damping: 20, stiffness: 260 });
+    labelOp.value = withTiming(isFocused ? 1  : 0, { duration: 180 });
   }, [isFocused]);
+
+  const labelWrapStyle = useAnimatedStyle(() => ({
+    maxWidth: labelW.value,
+    opacity:  labelOp.value,
+  }));
 
   const bounceStyle = useAnimatedStyle(() => ({
     transform: [{ scale: bounce.value }],
-  }));
-  const labelStyle = useAnimatedStyle(() => ({
-    opacity: labelOp.value,
-  }));
-  const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: iconScale.value }],
   }));
 
   const handlePress = () => {
@@ -56,24 +56,18 @@ function TabItem({ route, isFocused, label, navigation }) {
 
   return (
     <TouchableOpacity style={styles.item} onPress={handlePress} activeOpacity={1}>
-      <Animated.View style={[styles.itemContent, bounceStyle]}>
+      <Animated.View style={[styles.row, bounceStyle]}>
 
         {/* icon */}
-        <Animated.View style={iconStyle}>
-          <MaterialCommunityIcons
-            name={isFocused ? icons.on : icons.off}
-            size={24}
-            color={isFocused ? '#FFFFFF' : INACTIVE}
-          />
-        </Animated.View>
+        <MaterialCommunityIcons
+          name={isFocused ? icons.on : icons.off}
+          size={22}
+          color={isFocused ? '#FFFFFF' : INACTIVE}
+        />
 
-        {/* label — always in DOM, fades in/out so height stays stable */}
-        <Animated.View style={labelStyle}>
-          <StyledText
-            weight="600"
-            numberOfLines={1}
-            style={styles.label}
-          >
+        {/* name — expands beside icon when active, collapses when inactive */}
+        <Animated.View style={[styles.labelWrap, labelWrapStyle]}>
+          <StyledText weight="600" numberOfLines={1} style={styles.label}>
             {label}
           </StyledText>
         </Animated.View>
@@ -88,35 +82,29 @@ export function CustomTabBar({ state, descriptors, navigation }) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const [barW, setBarW] = useState(0);
-  const firstLayout     = useRef(true);
-  const tabCount        = state.routes.length;
-  const tabW            = barW > 0 ? barW / tabCount : 0;
+  const [barW, setBarW]     = useState(0);
+  const firstLayout         = useRef(true);
+  const tabCount            = state.routes.length;
+  const tabW                = barW > 0 ? barW / tabCount : 0;
 
-  // Sliding pill x-position
+  // pill x — snaps on first layout, then springs on tab change
   const pillX = useSharedValue(0);
 
   useEffect(() => {
     if (tabW <= 0) return;
     const target = state.index * tabW;
     if (firstLayout.current) {
-      pillX.value    = target;          // snap on first paint
+      pillX.value = target;
       firstLayout.current = false;
     } else {
-      pillX.value = withSpring(target, {
-        damping:   24,
-        stiffness: 260,
-        mass:      0.9,
-      });
+      pillX.value = withSpring(target, { damping: 24, stiffness: 260, mass: 0.9 });
     }
   }, [state.index, tabW]);
 
   const pillStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: pillX.value }],
-    width:     tabW,
+    width: tabW,
   }));
-
-  const barBg = isDark ? '#0F172A' : '#FFFFFF';
 
   return (
     <View
@@ -128,24 +116,24 @@ export function CustomTabBar({ state, descriptors, navigation }) {
         },
       ]}
     >
-      {/* shadow wrapper (separate from overflow-hidden inner) */}
+      {/* shadow shell */}
       <View
         style={[
           styles.shadow,
-          { backgroundColor: barBg, shadowColor: '#1D9BF0' },
+          {
+            backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+            shadowColor: '#1D9BF0',
+          },
         ]}
       >
-        {/* inner: overflow:hidden so gradient pill clips to bar shape */}
+        {/* overflow:hidden inner so gradient pill clips to bar corners */}
         <View
-          style={[styles.bar, { backgroundColor: barBg }]}
+          style={[styles.bar, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}
           onLayout={e => setBarW(e.nativeEvent.layout.width)}
         >
-          {/* sliding gradient pill */}
+          {/* sliding gradient pill (behind all items) */}
           {tabW > 0 && (
-            <Animated.View
-              style={[styles.pill, pillStyle]}
-              pointerEvents="none"
-            >
+            <Animated.View style={[styles.pill, pillStyle]} pointerEvents="none">
               <LinearGradient
                 colors={GRADIENT}
                 start={GRADIENT_START}
@@ -155,7 +143,6 @@ export function CustomTabBar({ state, descriptors, navigation }) {
             </Animated.View>
           )}
 
-          {/* tab items rendered above the pill */}
           {state.routes.map((route, index) => {
             const isFocused = state.index === index;
             const { options } = descriptors[route.key];
@@ -180,58 +167,63 @@ export function CustomTabBar({ state, descriptors, navigation }) {
   );
 }
 
-const RADIUS = 28;
+const R = 26;
 
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 14,
-    paddingTop:        8,
+    paddingTop: 8,
   },
 
-  /* outer view — carries the iOS shadow */
+  // carries the iOS/Android shadow
   shadow: {
-    borderRadius:  RADIUS,
+    borderRadius:  R,
     shadowOffset:  { width: 0, height: -3 },
     shadowOpacity: 0.22,
     shadowRadius:  22,
-    elevation:     20,           // Android glow
+    elevation:     20,
   },
 
-  /* inner view — clips the gradient pill */
+  // clips the sliding pill to the bar's rounded corners
   bar: {
     flexDirection: 'row',
-    borderRadius:  RADIUS,
+    borderRadius:  R,
     overflow:      'hidden',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
 
-  /* gradient pill — sits behind all items */
+  // the gradient pill — absolute, same height as bar interior
   pill: {
-    position:     'absolute',
-    top:          0,
-    bottom:       0,
-    overflow:     'hidden',
-    borderRadius: RADIUS,
-    zIndex:       0,
+    position: 'absolute',
+    top:      0,
+    bottom:   0,
+    zIndex:   0,
   },
 
-  /* each tab item */
+  // each tab slot
   item: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    zIndex:         1,           // above the pill
-    paddingVertical: 4,
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    zIndex:          1,            // above the pill
+    paddingVertical: 7,
   },
-  itemContent: {
+
+  // horizontal layout: icon + name
+  row: {
+    flexDirection:  'row',
     alignItems:     'center',
-    justifyContent: 'center',
-    gap:            3,
+    gap:             5,
   },
+
+  // animated container for the label
+  labelWrap: {
+    overflow: 'hidden',
+  },
+
   label: {
-    fontSize:      10,
+    fontSize:      11,
     color:         '#FFFFFF',
     letterSpacing: 0.1,
-    textAlign:     'center',
   },
 });
