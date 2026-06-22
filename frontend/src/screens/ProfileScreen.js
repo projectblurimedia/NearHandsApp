@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Switch, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { StyledText } from '../components/StyledText';
 import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
+import { useRefresh } from '../hooks/useRefresh';
 import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 
 const USER_MENU = [
@@ -27,6 +28,7 @@ const WORKER_STATS = [
 export function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
   const { mode, showConfirm, showToast } = useApp();
+  const { refreshing, onRefresh } = useRefresh();
 
   const handleDeleteAccount = () => {
     showConfirm(
@@ -46,7 +48,7 @@ export function ProfileScreen() {
 
   return (
     <ScreenLayout title="Profile">
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1D9BF0" colors={['#1D9BF0','#264B96']} progressBackgroundColor="#fff" />}>
         <View style={[styles.profileCard, SHADOW, { backgroundColor: colors.card }]}>
           <View style={[styles.avatarLarge, { backgroundColor: '#1D9BF0' }]}>
             <StyledText weight="700" style={styles.avatarLargeText}>

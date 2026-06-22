@@ -165,16 +165,18 @@ const styles = StyleSheet.create({
     justifyContent:  'center',
     paddingVertical: 6,
     zIndex:          1,
+    overflow:        'hidden',   // clip long labels to tab slot width
   },
-  // icon + name side-by-side
   row: {
     flexDirection: 'row',
     alignItems:    'center',
-    gap:           5,
+    gap:           4,
+    maxWidth:      '100%',
   },
   label: {
-    fontSize:      11,
+    fontSize:      10.5,
     color:         '#FFFFFF',
     letterSpacing: 0.1,
+    flexShrink:    1,            // shrinks before clipping
   },
 });

@@ -23,10 +23,9 @@ import { useTheme } from './src/hooks/useTheme';
 SplashScreen.preventAutoHideAsync();
 
 function AppShell() {
-  const { isDark } = useTheme();
   return (
     <NavigationContainer>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <StatusBar style="light" translucent backgroundColor="transparent" />
       <TabNavigator />
     </NavigationContainer>
   );

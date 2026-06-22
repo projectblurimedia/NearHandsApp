@@ -5,12 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { StyledText } from '../components/StyledText';
 import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
+import { useRefresh } from '../hooks/useRefresh';
 import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 
 const CATEGORIES = [
@@ -30,6 +32,7 @@ const MOCK_RESULTS = [
 export function SearchScreen() {
   const { colors } = useTheme();
   const { showToast } = useApp();
+  const { refreshing, onRefresh } = useRefresh();
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeDistance, setActiveDistance] = useState('Any');
@@ -42,7 +45,11 @@ export function SearchScreen() {
 
   return (
     <ScreenLayout title="Search">
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1D9BF0" colors={['#1D9BF0','#264B96']} progressBackgroundColor="#fff" />}
+      >
         <View style={[styles.searchBar, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
           <Ionicons name="search" size={18} color={colors.subtext} />
           <TextInput

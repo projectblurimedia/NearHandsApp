@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { StyledText } from '../components/StyledText';
 import { useTheme } from '../hooks/useTheme';
 import { useApp } from '../hooks/useApp';
+import { useRefresh } from '../hooks/useRefresh';
 import { SPACING, RADIUS, SHADOW } from '../constants/layout';
 
 const BAR_DATA = [
@@ -37,12 +38,13 @@ const MAX_BAR = Math.max(...BAR_DATA.map(d => d.amount));
 export function EarningsScreen() {
   const { colors } = useTheme();
   const { mode, showToast } = useApp();
+  const { refreshing, onRefresh } = useRefresh();
   const [activeTab, setActiveTab] = useState('week');
 
   if (mode === 'worker') {
     return (
       <ScreenLayout title="Earnings">
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1D9BF0" colors={['#1D9BF0','#264B96']} progressBackgroundColor="#fff" />}>
           <View style={[styles.summaryCard, { backgroundColor: '#1D9BF0' }]}>
             <StyledText weight="400" style={styles.summaryLabel}>Total Earnings</StyledText>
             <StyledText weight="700" style={styles.summaryAmount}>₹12,430</StyledText>

@@ -1,37 +1,41 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Pressable, Switch, ScrollView } from 'react-native';
+import {
+  StyleSheet, View, TouchableOpacity, Pressable,
+  Switch, ScrollView, Dimensions, Platform,
+} from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
+  useSharedValue, useAnimatedStyle, withTiming, Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyledText } from './StyledText';
 import { useApp } from '../hooks/useApp';
 import { useTheme } from '../hooks/useTheme';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
-import { SPACING, RADIUS, SIDEBAR_WIDTH } from '../constants/layout';
+import { SPACING, RADIUS } from '../constants/layout';
 
-const NAV_SECTIONS = [
+const { width: SW } = Dimensions.get('window');
+const DRAWER_WIDTH = SW * 0.85;
+
+/* ── nav sections mirroring CampuSphere layout ─── */
+const SECTIONS = [
   {
-    key: 'nav',
+    title: 'Main',
     items: [
-      { key: 'home',     label: 'Home',              icon: 'home',               color: '#1D9BF0' },
-      { key: 'search',   label: 'Search Workers',    icon: 'search',             color: '#8b5cf6' },
-      { key: 'problems', label: 'Problems',          icon: 'alert-circle',       color: '#f59e0b' },
-      { key: 'earnings', label: 'Wallet & Earnings', icon: 'wallet',             color: '#10b981' },
-      { key: 'profile',  label: 'My Profile',        icon: 'person-circle',      color: '#ec4899' },
+      { key: 'home',     label: 'Home',              sub: 'Dashboard overview',  icon: 'home-variant',    lib: 'MCI',  gradient: ['#1D9BF0', '#264B96'] },
+      { key: 'search',   label: 'Search Workers',    sub: 'Find nearby talent',  icon: 'account-search',  lib: 'MCI',  gradient: ['#8b5cf6', '#7c3aed'] },
+      { key: 'problems', label: 'Problems',          sub: 'Reports & issues',    icon: 'bell-badge',      lib: 'MCI',  gradient: ['#f59e0b', '#d97706'] },
+      { key: 'earnings', label: 'Wallet & Earnings', sub: 'Transactions & funds', icon: 'wallet',          lib: 'MCI',  gradient: ['#10b981', '#059669'] },
+      { key: 'profile',  label: 'My Profile',        sub: 'Account & settings',  icon: 'account-circle',  lib: 'MCI',  gradient: ['#ec4899', '#d946ef'] },
     ],
   },
   {
-    key: 'more',
+    title: 'Support',
     items: [
-      { key: 'settings', label: 'Settings',         icon: 'settings',           color: '#64748b' },
-      { key: 'help',     label: 'Help & Support',   icon: 'help-circle',        color: '#06b6d4' },
-      { key: 'about',    label: 'About NearHands',  icon: 'information-circle', color: '#3b82f6' },
+      { key: 'settings', label: 'App Settings',    sub: 'Preferences',         icon: 'cog',             lib: 'MCI',  gradient: ['#64748b', '#475569'] },
+      { key: 'help',     label: 'Help & Support',  sub: 'FAQs & contact',      icon: 'help-circle',     lib: 'MCI',  gradient: ['#06b6d4', '#0891b2'] },
+      { key: 'about',    label: 'About NearHands', sub: 'Version & info',      icon: 'information',     lib: 'MCI',  gradient: ['#3b82f6', '#2563eb'] },
     ],
   },
 ];
@@ -39,43 +43,43 @@ const NAV_SECTIONS = [
 function NavItem({ item, onPress, colors }) {
   return (
     <TouchableOpacity
-      style={[styles.navItem, { backgroundColor: colors.inputBg }]}
+      activeOpacity={0.88}
+      style={[styles.item, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={onPress}
-      activeOpacity={0.6}
     >
-      <View style={[styles.iconBox, { backgroundColor: item.color + '20' }]}>
-        <Ionicons name={item.icon} size={18} color={item.color} />
+      <LinearGradient colors={item.gradient} style={styles.iconBox}>
+        <MaterialCommunityIcons name={item.icon} size={18} color="#fff" />
+      </LinearGradient>
+      <View style={styles.itemText}>
+        <StyledText weight="600" style={[styles.itemTitle, { color: colors.text }]}>
+          {item.label}
+        </StyledText>
+        <StyledText weight="400" style={[styles.itemSub, { color: colors.subtext }]}>
+          {item.sub}
+        </StyledText>
       </View>
-      <StyledText weight="500" style={[styles.navLabel, { color: colors.text }]}>
-        {item.label}
-      </StyledText>
-      <Ionicons name="chevron-forward" size={12} color={colors.border} />
+      <Ionicons name="chevron-forward" size={16} color={colors.subtext} />
     </TouchableOpacity>
   );
 }
 
 export function Sidebar() {
-  const { sidebarOpen, closeSidebar, showConfirm } = useApp();
+  const { sidebarOpen, closeSidebar, showConfirm, mode } = useApp();
   const { colors, isDark, toggleTheme } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const translateX = useSharedValue(SIDEBAR_WIDTH);
-  const overlayOpacity = useSharedValue(0);
+  const translateX = useSharedValue(DRAWER_WIDTH);
+  const overlayOp  = useSharedValue(0);
 
   useEffect(() => {
-    translateX.value = withTiming(sidebarOpen ? 0 : SIDEBAR_WIDTH, {
-      duration: 200,
-      easing: Easing.out(Easing.quad),
+    translateX.value = withTiming(sidebarOpen ? 0 : DRAWER_WIDTH, {
+      duration: 220, easing: Easing.out(Easing.quad),
     });
-    overlayOpacity.value = withTiming(sidebarOpen ? 1 : 0, { duration: 200 });
+    overlayOp.value = withTiming(sidebarOpen ? 1 : 0, { duration: 220 });
   }, [sidebarOpen]);
 
-  const drawerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayOpacity.value,
-  }));
+  const drawerStyle  = useAnimatedStyle(() => ({ transform: [{ translateX: translateX.value }] }));
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOp.value }));
 
   const handleLogout = () => {
     closeSidebar();
@@ -84,6 +88,7 @@ export function Sidebar() {
 
   return (
     <>
+      {/* backdrop */}
       <Animated.View
         style={[styles.overlay, overlayStyle]}
         pointerEvents={sidebarOpen ? 'auto' : 'none'}
@@ -91,92 +96,125 @@ export function Sidebar() {
         <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar} />
       </Animated.View>
 
-      <Animated.View style={[styles.drawer, { backgroundColor: colors.card }, drawerStyle]}>
+      {/* drawer */}
+      <Animated.View style={[styles.drawer, { backgroundColor: colors.background }, drawerStyle]}>
 
-        {/* ── Header: same gradient as main header ── */}
+        {/* ── gradient header: icon+title left, close right ── */}
         <LinearGradient
           colors={GRADIENT}
           start={GRADIENT_START}
           end={GRADIENT_END}
-          style={[styles.header, { paddingTop: insets.top + 16 }]}
+          style={[styles.header, { paddingTop: insets.top + 18 }]}
         >
-          {/* Avatar + Name/Close row */}
-          <View style={styles.userRow}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={26} color="#1D9BF0" />
-            </View>
-            <View style={styles.userInfo}>
-              {/* Name and close button — space-between */}
-              <View style={styles.nameCloseRow}>
-                <StyledText weight="700" style={styles.userName}>Guest User</StyledText>
-                <TouchableOpacity onPress={closeSidebar} hitSlop={14}>
-                  <View style={styles.closeBtnCircle}>
-                    <Ionicons name="close" size={14} color="rgba(255,255,255,0.9)" />
-                  </View>
-                </TouchableOpacity>
+          <View style={styles.headerRow}>
+            <View style={styles.headerLeft}>
+              <View style={styles.avatarCircle}>
+                <Ionicons name="person" size={28} color="#1D9BF0" />
               </View>
-              <StyledText weight="400" style={styles.userSub}>Hyderabad, India</StyledText>
+              <View style={styles.headerText}>
+                <StyledText weight="700" style={styles.userName}>Guest User</StyledText>
+                <StyledText weight="400" style={styles.userSub}>
+                  {mode === 'worker' ? 'Worker Account' : 'Hyderabad, India'}
+                </StyledText>
+              </View>
             </View>
+
+            <TouchableOpacity style={styles.closeBtn} onPress={closeSidebar} hitSlop={12}>
+              <Ionicons name="close" size={22} color="#fff" />
+            </TouchableOpacity>
           </View>
 
-          {/* Stats row */}
+          {/* stats chips */}
           <View style={styles.statsRow}>
             {[
               { label: 'Wallet', value: '₹280' },
               { label: 'Reveals', value: '28' },
-              { label: 'Rating', value: '4.8 ★' },
+              { label: 'Rating', value: '4.8★' },
             ].map(s => (
-              <View key={s.label} style={styles.statChip}>
-                <StyledText weight="700" style={styles.statValue}>{s.value}</StyledText>
-                <StyledText weight="400" style={styles.statLabel}>{s.label}</StyledText>
+              <View key={s.label} style={styles.chip}>
+                <StyledText weight="700" style={styles.chipVal}>{s.value}</StyledText>
+                <StyledText weight="400" style={styles.chipLabel}>{s.label}</StyledText>
               </View>
             ))}
           </View>
         </LinearGradient>
 
-        {/* ── Nav body ── */}
+        {/* ── scrollable nav body ── */}
         <ScrollView
           style={styles.body}
-          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.bodyContent}
+          showsVerticalScrollIndicator={false}
         >
-          {NAV_SECTIONS.map((section, si) => (
-            <View key={section.key} style={si > 0 && styles.sectionGap}>
-              {section.items.map(item => (
-                <NavItem key={item.key} item={item} onPress={closeSidebar} colors={colors} />
-              ))}
+          {SECTIONS.map(section => (
+            <View key={section.title} style={styles.section}>
+              <StyledText weight="600" style={[styles.sectionTitle, { color: colors.text }]}>
+                {section.title}
+              </StyledText>
+              <View style={styles.itemsGroup}>
+                {section.items.map(item => (
+                  <NavItem key={item.key} item={item} onPress={closeSidebar} colors={colors} />
+                ))}
+              </View>
             </View>
           ))}
 
-          {/* Dark / Light toggle */}
-          <View style={[styles.sectionGap, styles.toggleWrap, { backgroundColor: colors.inputBg }]}>
-            <View style={[styles.iconBox, { backgroundColor: isDark ? '#fbbf2420' : '#f59e0b20' }]}>
-              <Ionicons name={isDark ? 'moon' : 'sunny'} size={18} color={isDark ? '#fbbf24' : '#f59e0b'} />
-            </View>
-            <StyledText weight="500" style={[styles.navLabel, { color: colors.text }]}>
-              {isDark ? 'Dark Mode' : 'Light Mode'}
+          {/* Appearance section */}
+          <View style={styles.section}>
+            <StyledText weight="600" style={[styles.sectionTitle, { color: colors.text }]}>
+              Appearance
             </StyledText>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#d1d5db', true: '#1D9BF0' }}
-              thumbColor="#ffffff"
-            />
+            <View style={styles.itemsGroup}>
+              <View style={[styles.item, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <LinearGradient
+                  colors={isDark ? ['#fbbf24', '#d97706'] : ['#6366f1', '#4f46e5']}
+                  style={styles.iconBox}
+                >
+                  <MaterialCommunityIcons
+                    name={isDark ? 'weather-night' : 'white-balance-sunny'}
+                    size={18}
+                    color="#fff"
+                  />
+                </LinearGradient>
+                <View style={styles.itemText}>
+                  <StyledText weight="600" style={[styles.itemTitle, { color: colors.text }]}>
+                    {isDark ? 'Dark Mode' : 'Light Mode'}
+                  </StyledText>
+                  <StyledText weight="400" style={[styles.itemSub, { color: colors.subtext }]}>
+                    Toggle appearance
+                  </StyledText>
+                </View>
+                <Switch
+                  value={isDark}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: '#d1d5db', true: '#1D9BF0' }}
+                  thumbColor="#fff"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Logout button — full-width gradient like CampuSphere */}
+          <TouchableOpacity
+            style={[styles.logoutWrap, Platform.select({ ios: styles.shadowIOS, android: styles.shadowAndroid })]}
+            onPress={handleLogout}
+            activeOpacity={0.88}
+          >
+            <LinearGradient colors={['#ef4444', '#dc2626']} style={styles.logoutGradient}>
+              <Ionicons name="log-out-outline" size={18} color="#fff" />
+              <StyledText weight="700" style={styles.logoutText}>Log Out</StyledText>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Footer */}
+          <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+            <StyledText weight="400" style={[styles.footerText, { color: colors.subtext }]}>
+              NearHands v1.0.0
+            </StyledText>
+            <StyledText weight="400" style={[styles.footerCopy, { color: colors.subtext }]}>
+              © 2026 Bluri Developers
+            </StyledText>
           </View>
         </ScrollView>
-
-        {/* ── Logout ── */}
-        <TouchableOpacity
-          style={[styles.logoutRow, { borderTopColor: colors.border, paddingBottom: insets.bottom + 10 }]}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconBox, { backgroundColor: '#ef444420' }]}>
-            <Ionicons name="log-out-outline" size={18} color="#ef4444" />
-          </View>
-          <StyledText weight="600" style={styles.logoutText}>Log Out</StyledText>
-        </TouchableOpacity>
-
       </Animated.View>
     </>
   );
@@ -185,132 +223,94 @@ export function Sidebar() {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.52)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 100,
   },
   drawer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: SIDEBAR_WIDTH,
-    zIndex: 101,
-    shadowColor: '#000',
-    shadowOffset: { width: -6, height: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
-    elevation: 24,
+    position:  'absolute',
+    top:       0,
+    right:     0,
+    bottom:    0,
+    width:     DRAWER_WIDTH,
+    zIndex:    101,
+    ...Platform.select({
+      ios:     { shadowColor: '#000', shadowOffset: { width: -4, height: 0 }, shadowOpacity: 0.2, shadowRadius: 20 },
+      android: { elevation: 20 },
+    }),
     overflow: 'hidden',
   },
-  header: {
-    paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.md + 4,
-  },
-  userRow: {
+
+  /* header */
+  header: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.md },
+  headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: SPACING.md,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  nameCloseRow: {
-    flexDirection: 'row',
+    alignItems:    'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom:  SPACING.md,
   },
-  userName: {
-    color: '#fff',
-    fontSize: 15,
+  headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 8 },
+  avatarCircle: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: '#fff',
+    justifyContent: 'center', alignItems: 'center',
   },
-  closeBtnCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.28)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  headerText:  { flex: 1 },
+  userName:    { color: '#fff', fontSize: 16 },
+  userSub:     { color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 },
+  closeBtn:    {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  userSub: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 11,
-    marginTop: 2,
+  statsRow:    { flexDirection: 'row', gap: 8 },
+  chip:        {
+    flex: 1, backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: RADIUS.md, paddingVertical: 8, alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)',
   },
-  statsRow: {
+  chipVal:     { color: '#fff', fontSize: 14 },
+  chipLabel:   { color: 'rgba(255,255,255,0.6)', fontSize: 9, marginTop: 1 },
+
+  /* body */
+  body:        { flex: 1 },
+  bodyContent: { paddingBottom: SPACING.md },
+  section:     { marginTop: SPACING.md, paddingHorizontal: SPACING.md },
+  sectionTitle:{ fontSize: 16, marginBottom: SPACING.xs + 2 },
+  itemsGroup:  { gap: 8 },
+
+  /* nav item */
+  item: {
     flexDirection: 'row',
-    gap: 6,
-  },
-  statChip: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: RADIUS.md,
-    paddingVertical: 7,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-  },
-  statValue: {
-    color: '#fff',
-    fontSize: 13,
-  },
-  statLabel: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 9,
-    marginTop: 1,
-  },
-  body: { flex: 1 },
-  bodyContent: {
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm,
-    paddingBottom: SPACING.md,
-    gap: 4,
-  },
-  sectionGap: { marginTop: SPACING.sm },
-  navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    borderRadius: RADIUS.lg,
-    marginBottom: 3,
+    alignItems:    'center',
+    borderRadius:  RADIUS.lg,
+    borderWidth:   1,
+    padding:       14,
+    ...Platform.select({
+      ios:     { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
+      android: { elevation: 1 },
+    }),
   },
   iconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.md,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 42, height: 42, borderRadius: 10,
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: 12,
   },
-  navLabel: { flex: 1, fontSize: 13 },
-  toggleWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    borderRadius: RADIUS.lg,
-    marginTop: SPACING.sm,
+  itemText:    { flex: 1, marginRight: 8 },
+  itemTitle:   { fontSize: 14 },
+  itemSub:     { fontSize: 11, marginTop: 1, opacity: 0.7 },
+
+  /* logout */
+  logoutWrap:  { marginHorizontal: SPACING.md, marginTop: SPACING.lg, borderRadius: RADIUS.lg, overflow: 'hidden' },
+  shadowIOS:   { shadowColor: '#ef4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8 },
+  shadowAndroid: { elevation: 4 },
+  logoutGradient: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 15, paddingHorizontal: 20, gap: 8,
   },
-  logoutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: SPACING.md + 4,
-    paddingTop: SPACING.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  logoutText: { flex: 1, fontSize: 14, color: '#ef4444' },
+  logoutText:  { fontSize: 15, color: '#fff' },
+
+  /* footer */
+  footer:      { alignItems: 'center', paddingTop: SPACING.md },
+  footerText:  { fontSize: 12 },
+  footerCopy:  { fontSize: 11, opacity: 0.5, marginTop: 2 },
 });
