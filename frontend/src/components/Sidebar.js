@@ -312,9 +312,9 @@ const styles = StyleSheet.create({
   /* ── body ── */
   body:        { flex: 1 },
   bodyContent: { paddingBottom: SPACING.md },
-  section:     { marginTop: SPACING.md, paddingHorizontal: SPACING.md },
-  sectionTitle:{ fontSize: 16, marginBottom: SPACING.sm },
-  itemsGroup:  { gap: 10 },
+  section:     { marginTop: SPACING.sm + 4, paddingHorizontal: SPACING.md },
+  sectionTitle:{ fontSize: 15, marginBottom: 6 },
+  itemsGroup:  { gap: 6 },
 
   /* ── nav item ── */
   item: {
@@ -329,20 +329,20 @@ const styles = StyleSheet.create({
     }),
   },
   iconBlock: {
-    width:          60,          // wider tile
+    width:          58,
     justifyContent: 'center',
     alignItems:     'center',
-    // NO borderRadius here — parent overflow:hidden naturally rounds only the left corners
+    // NO borderRadius — parent overflow:hidden clips left corners naturally
   },
   itemText: {
     flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical:   13,
+    paddingHorizontal: 12,
+    paddingVertical:   9,        // reduced from 13 → compact rows
     justifyContent:    'center',
   },
-  itemTitle: { fontSize: 14 },
-  itemSub:   { fontSize: 11, marginTop: 2, opacity: 0.7 },
-  chevron:   { marginRight: 12 },
+  itemTitle: { fontSize: 13.5 },
+  itemSub:   { fontSize: 11, marginTop: 1, opacity: 0.7 },
+  chevron:   { marginRight: 12, alignSelf: 'center' }, // vertically centered
 
   /* ── logout ── */
   logoutWrap: {
