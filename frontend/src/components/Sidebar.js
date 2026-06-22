@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue, useAnimatedStyle, withTiming, Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyledText } from './StyledText';
 import { useApp } from '../hooks/useApp';
@@ -18,38 +18,73 @@ import { SPACING, RADIUS } from '../constants/layout';
 const { width: SW } = Dimensions.get('window');
 const DRAWER_WIDTH = SW * 0.85;
 
-/* ── nav sections mirroring CampuSphere layout ─── */
+/* ── only non-tab items live in the sidebar ─────────────────── */
 const SECTIONS = [
   {
-    title: 'Main',
+    title: 'Features',      // problems + earnings (open as modal pages)
     items: [
-      { key: 'home',     label: 'Home',              sub: 'Dashboard overview',  icon: 'home-variant',    lib: 'MCI',  gradient: ['#1D9BF0', '#264B96'] },
-      { key: 'search',   label: 'Search Workers',    sub: 'Find nearby talent',  icon: 'account-search',  lib: 'MCI',  gradient: ['#8b5cf6', '#7c3aed'] },
-      { key: 'problems', label: 'Problems',          sub: 'Reports & issues',    icon: 'bell-badge',      lib: 'MCI',  gradient: ['#f59e0b', '#d97706'] },
-      { key: 'earnings', label: 'Wallet & Earnings', sub: 'Transactions & funds', icon: 'wallet',          lib: 'MCI',  gradient: ['#10b981', '#059669'] },
-      { key: 'profile',  label: 'My Profile',        sub: 'Account & settings',  icon: 'account-circle',  lib: 'MCI',  gradient: ['#ec4899', '#d946ef'] },
+      {
+        key: 'problems',
+        label: 'Problems',
+        sub: 'Reports & issues',
+        icon: 'bell-badge',
+        gradient: ['#f59e0b', '#d97706'],
+        page: 'problems',
+      },
+      {
+        key: 'earnings',
+        label: 'Wallet & Earnings',
+        sub: 'Transactions & balance',
+        icon: 'wallet',
+        gradient: ['#10b981', '#059669'],
+        page: 'earnings',
+      },
     ],
   },
   {
-    title: 'Support',
+    title: 'Settings',
     items: [
-      { key: 'settings', label: 'App Settings',    sub: 'Preferences',         icon: 'cog',             lib: 'MCI',  gradient: ['#64748b', '#475569'] },
-      { key: 'help',     label: 'Help & Support',  sub: 'FAQs & contact',      icon: 'help-circle',     lib: 'MCI',  gradient: ['#06b6d4', '#0891b2'] },
-      { key: 'about',    label: 'About NearHands', sub: 'Version & info',      icon: 'information',     lib: 'MCI',  gradient: ['#3b82f6', '#2563eb'] },
+      {
+        key: 'settings',
+        label: 'App Settings',
+        sub: 'Preferences',
+        icon: 'cog',
+        gradient: ['#64748b', '#475569'],
+        page: 'settings',
+      },
+      {
+        key: 'help',
+        label: 'Help & Support',
+        sub: 'FAQs & contact',
+        icon: 'help-circle',
+        gradient: ['#06b6d4', '#0891b2'],
+        page: 'help',
+      },
+      {
+        key: 'about',
+        label: 'About NearHands',
+        sub: 'Version & info',
+        icon: 'information',
+        gradient: ['#3b82f6', '#2563eb'],
+        page: 'about',
+      },
     ],
   },
 ];
 
+/* ── nav item: icon fills full height, left rounded, right sharp ── */
 function NavItem({ item, onPress, colors }) {
   return (
     <TouchableOpacity
-      activeOpacity={0.88}
+      activeOpacity={0.85}
       style={[styles.item, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={onPress}
     >
-      <LinearGradient colors={item.gradient} style={styles.iconBox}>
-        <MaterialCommunityIcons name={item.icon} size={18} color="#fff" />
+      {/* gradient block flush-left, full-height, left-rounded, right-sharp */}
+      <LinearGradient colors={item.gradient} style={styles.iconBlock}>
+        <MaterialCommunityIcons name={item.icon} size={22} color="#fff" />
       </LinearGradient>
+
       <View style={styles.itemText}>
         <StyledText weight="600" style={[styles.itemTitle, { color: colors.text }]}>
           {item.label}
@@ -58,13 +93,14 @@ function NavItem({ item, onPress, colors }) {
           {item.sub}
         </StyledText>
       </View>
-      <Ionicons name="chevron-forward" size={16} color={colors.subtext} />
+
+      <Ionicons name="chevron-forward" size={16} color={colors.subtext} style={styles.chevron} />
     </TouchableOpacity>
   );
 }
 
 export function Sidebar() {
-  const { sidebarOpen, closeSidebar, showConfirm, mode } = useApp();
+  const { sidebarOpen, closeSidebar, showConfirm, mode, openMenuPage } = useApp();
   const { colors, isDark, toggleTheme } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -88,7 +124,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* backdrop */}
       <Animated.View
         style={[styles.overlay, overlayStyle]}
         pointerEvents={sidebarOpen ? 'auto' : 'none'}
@@ -96,10 +131,9 @@ export function Sidebar() {
         <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar} />
       </Animated.View>
 
-      {/* drawer */}
       <Animated.View style={[styles.drawer, { backgroundColor: colors.background }, drawerStyle]}>
 
-        {/* ── gradient header: icon+title left, close right ── */}
+        {/* gradient header */}
         <LinearGradient
           colors={GRADIENT}
           start={GRADIENT_START}
@@ -118,13 +152,11 @@ export function Sidebar() {
                 </StyledText>
               </View>
             </View>
-
             <TouchableOpacity style={styles.closeBtn} onPress={closeSidebar} hitSlop={12}>
               <Ionicons name="close" size={22} color="#fff" />
             </TouchableOpacity>
           </View>
 
-          {/* stats chips */}
           <View style={styles.statsRow}>
             {[
               { label: 'Wallet', value: '₹280' },
@@ -139,7 +171,7 @@ export function Sidebar() {
           </View>
         </LinearGradient>
 
-        {/* ── scrollable nav body ── */}
+        {/* scrollable body */}
         <ScrollView
           style={styles.body}
           contentContainerStyle={styles.bodyContent}
@@ -152,13 +184,18 @@ export function Sidebar() {
               </StyledText>
               <View style={styles.itemsGroup}>
                 {section.items.map(item => (
-                  <NavItem key={item.key} item={item} onPress={closeSidebar} colors={colors} />
+                  <NavItem
+                    key={item.key}
+                    item={item}
+                    colors={colors}
+                    onPress={() => openMenuPage(item.page)}
+                  />
                 ))}
               </View>
             </View>
           ))}
 
-          {/* Appearance section */}
+          {/* Appearance toggle */}
           <View style={styles.section}>
             <StyledText weight="600" style={[styles.sectionTitle, { color: colors.text }]}>
               Appearance
@@ -167,11 +204,11 @@ export function Sidebar() {
               <View style={[styles.item, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <LinearGradient
                   colors={isDark ? ['#fbbf24', '#d97706'] : ['#6366f1', '#4f46e5']}
-                  style={styles.iconBox}
+                  style={styles.iconBlock}
                 >
                   <MaterialCommunityIcons
                     name={isDark ? 'weather-night' : 'white-balance-sunny'}
-                    size={18}
+                    size={22}
                     color="#fff"
                   />
                 </LinearGradient>
@@ -188,26 +225,30 @@ export function Sidebar() {
                   onValueChange={toggleTheme}
                   trackColor={{ false: '#d1d5db', true: '#1D9BF0' }}
                   thumbColor="#fff"
+                  style={styles.chevron}
                 />
               </View>
             </View>
           </View>
 
-          {/* Logout button — full-width gradient like CampuSphere */}
+          {/* Full-width gradient logout */}
           <TouchableOpacity
-            style={[styles.logoutWrap, Platform.select({ ios: styles.shadowIOS, android: styles.shadowAndroid })]}
+            style={[styles.logoutWrap, Platform.select({
+              ios: { shadowColor: '#ef4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8 },
+              android: { elevation: 4 },
+            })]}
             onPress={handleLogout}
-            activeOpacity={0.88}
+            activeOpacity={0.85}
           >
-            <LinearGradient colors={['#ef4444', '#dc2626']} style={styles.logoutGradient}>
+            <LinearGradient colors={['#ef4444', '#dc2626']} style={styles.logoutGrad}>
               <Ionicons name="log-out-outline" size={18} color="#fff" />
               <StyledText weight="700" style={styles.logoutText}>Log Out</StyledText>
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Footer */}
+          {/* footer */}
           <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-            <StyledText weight="400" style={[styles.footerText, { color: colors.subtext }]}>
+            <StyledText weight="400" style={[styles.footerLine, { color: colors.subtext }]}>
               NearHands v1.0.0
             </StyledText>
             <StyledText weight="400" style={[styles.footerCopy, { color: colors.subtext }]}>
@@ -220,6 +261,8 @@ export function Sidebar() {
   );
 }
 
+const ITEM_RADIUS = 14;
+
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -227,12 +270,10 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   drawer: {
-    position:  'absolute',
-    top:       0,
-    right:     0,
-    bottom:    0,
-    width:     DRAWER_WIDTH,
-    zIndex:    101,
+    position: 'absolute',
+    top: 0, right: 0, bottom: 0,
+    width: DRAWER_WIDTH,
+    zIndex: 101,
     ...Platform.select({
       ios:     { shadowColor: '#000', shadowOffset: { width: -4, height: 0 }, shadowOpacity: 0.2, shadowRadius: 20 },
       android: { elevation: 20 },
@@ -240,77 +281,87 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  /* header */
+  /* ── header ── */
   header: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.md },
   headerRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    justifyContent: 'space-between',
-    marginBottom:  SPACING.md,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', marginBottom: SPACING.md,
   },
-  headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 8 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 8 },
   avatarCircle: {
     width: 52, height: 52, borderRadius: 26,
-    backgroundColor: '#fff',
-    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center',
   },
-  headerText:  { flex: 1 },
-  userName:    { color: '#fff', fontSize: 16 },
-  userSub:     { color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 },
-  closeBtn:    {
+  headerText: { flex: 1 },
+  userName:  { color: '#fff', fontSize: 16 },
+  userSub:   { color: 'rgba(255,255,255,0.65)', fontSize: 11, marginTop: 2 },
+  closeBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center', alignItems: 'center',
   },
-  statsRow:    { flexDirection: 'row', gap: 8 },
-  chip:        {
+  statsRow: { flexDirection: 'row', gap: 8 },
+  chip: {
     flex: 1, backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: RADIUS.md, paddingVertical: 8, alignItems: 'center',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)',
   },
-  chipVal:     { color: '#fff', fontSize: 14 },
-  chipLabel:   { color: 'rgba(255,255,255,0.6)', fontSize: 9, marginTop: 1 },
+  chipVal:   { color: '#fff', fontSize: 14 },
+  chipLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 9, marginTop: 1 },
 
-  /* body */
+  /* ── body ── */
   body:        { flex: 1 },
   bodyContent: { paddingBottom: SPACING.md },
   section:     { marginTop: SPACING.md, paddingHorizontal: SPACING.md },
-  sectionTitle:{ fontSize: 16, marginBottom: SPACING.xs + 2 },
-  itemsGroup:  { gap: 8 },
+  sectionTitle:{ fontSize: 16, marginBottom: SPACING.sm },
+  itemsGroup:  { gap: 10 },
 
-  /* nav item */
+  /* ── nav item ── */
   item: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    borderRadius:  RADIUS.lg,
-    borderWidth:   1,
-    padding:       14,
+    flexDirection:  'row',
+    alignItems:     'stretch',   // icon block fills full height
+    borderRadius:   ITEM_RADIUS,
+    borderWidth:    1,
+    overflow:       'hidden',    // clips icon block's left corners to ITEM_RADIUS, right stays square
     ...Platform.select({
       ios:     { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
       android: { elevation: 1 },
     }),
   },
-  iconBox: {
-    width: 42, height: 42, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center',
-    marginRight: 12,
+  iconBlock: {
+    width:          60,          // wider tile
+    justifyContent: 'center',
+    alignItems:     'center',
+    // NO borderRadius here — parent overflow:hidden naturally rounds only the left corners
   },
-  itemText:    { flex: 1, marginRight: 8 },
-  itemTitle:   { fontSize: 14 },
-  itemSub:     { fontSize: 11, marginTop: 1, opacity: 0.7 },
-
-  /* logout */
-  logoutWrap:  { marginHorizontal: SPACING.md, marginTop: SPACING.lg, borderRadius: RADIUS.lg, overflow: 'hidden' },
-  shadowIOS:   { shadowColor: '#ef4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8 },
-  shadowAndroid: { elevation: 4 },
-  logoutGradient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 15, paddingHorizontal: 20, gap: 8,
+  itemText: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical:   13,
+    justifyContent:    'center',
   },
-  logoutText:  { fontSize: 15, color: '#fff' },
+  itemTitle: { fontSize: 14 },
+  itemSub:   { fontSize: 11, marginTop: 2, opacity: 0.7 },
+  chevron:   { marginRight: 12 },
 
-  /* footer */
-  footer:      { alignItems: 'center', paddingTop: SPACING.md },
-  footerText:  { fontSize: 12 },
-  footerCopy:  { fontSize: 11, opacity: 0.5, marginTop: 2 },
+  /* ── logout ── */
+  logoutWrap: {
+    marginHorizontal: SPACING.md,
+    marginTop:        SPACING.lg,
+    borderRadius:     ITEM_RADIUS,
+    overflow:         'hidden',
+  },
+  logoutGrad: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'center',
+    paddingVertical: 15,
+    gap:             8,
+  },
+  logoutText: { fontSize: 15, color: '#fff' },
+
+  /* ── footer ── */
+  footer:     { alignItems: 'center', paddingTop: SPACING.md },
+  footerLine: { fontSize: 12 },
+  footerCopy: { fontSize: 11, opacity: 0.5, marginTop: 2 },
 });

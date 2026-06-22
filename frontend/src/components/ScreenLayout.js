@@ -4,6 +4,7 @@ import { GradientHeader } from './GradientHeader';
 import { Sidebar } from './Sidebar';
 import { Toast } from './Toast';
 import { ConfirmationModal } from './ConfirmationModal';
+import { MenuPageModal } from './MenuPageModal';
 import { useTheme } from '../hooks/useTheme';
 
 export function ScreenLayout({ children, title }) {
@@ -16,15 +17,12 @@ export function ScreenLayout({ children, title }) {
       <Sidebar />
       <Toast />
       <ConfirmationModal />
+      <MenuPageModal />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-  },
+  root:    { flex: 1 },
+  content: { flex: 1 },
 });

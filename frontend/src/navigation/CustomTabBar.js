@@ -13,11 +13,10 @@ import { useTheme } from '../hooks/useTheme';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
 const ICONS = {
-  Home:     { on: 'home-variant',    off: 'home-variant-outline' },
-  Search:   { on: 'magnify',         off: 'magnify' },
-  Problems: { on: 'bell-badge',      off: 'bell-outline' },
-  Earnings: { on: 'wallet',          off: 'wallet-outline' },
-  Profile:  { on: 'account-circle',  off: 'account-circle-outline' },
+  Home:     { on: 'home-variant',       off: 'home-variant-outline' },
+  Search:   { on: 'magnify',            off: 'magnify' },
+  Messages: { on: 'message-text',       off: 'message-text-outline' },
+  Profile:  { on: 'account-circle',     off: 'account-circle-outline' },
 };
 
 const INACTIVE = '#94A3B8';
@@ -83,7 +82,12 @@ export function CustomTabBar({ state, descriptors, navigation }) {
     <View
       style={[
         styles.wrapper,
-        { backgroundColor: colors.background, paddingBottom: Math.max(insets.bottom, 10) },
+        {
+          backgroundColor: colors.background,
+          paddingBottom: Math.max(insets.bottom, 10),
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: isDark ? '#30363d' : '#e5e7eb',
+        },
       ]}
     >
       {/* shadow shell — separate from overflow:hidden so glow isn't clipped */}

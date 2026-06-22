@@ -41,6 +41,9 @@ export function GradientHeader() {
           <Ionicons name="menu" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {/* bottom separator — subtle white hairline */}
+      <View style={styles.bottomBorder} />
     </LinearGradient>
   );
 }
@@ -52,6 +55,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.md + 2,
     gap: SPACING.sm,
+  },
+  bottomBorder: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   titleGroup: {
     flex: 1,
