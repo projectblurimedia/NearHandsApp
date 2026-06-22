@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet, View, TouchableOpacity, Pressable,
-  Switch, ScrollView, Dimensions, Platform, BackHandler,
+  Switch, ScrollView, Dimensions, Platform, BackHandler, Modal,
 } from 'react-native';
 import Animated, {
   useSharedValue, useAnimatedStyle, withTiming, Easing,
@@ -106,12 +106,21 @@ export function Sidebar() {
 
   const translateX = useSharedValue(DRAWER_WIDTH);
   const overlayOp  = useSharedValue(0);
+  // Keep modal mounted during close animation so it doesn't flash-dismiss
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    translateX.value = withTiming(sidebarOpen ? 0 : DRAWER_WIDTH, {
-      duration: 220, easing: Easing.out(Easing.quad),
-    });
-    overlayOp.value = withTiming(sidebarOpen ? 1 : 0, { duration: 220 });
+    if (sidebarOpen) {
+      setModalVisible(true);
+      translateX.value = withTiming(0, { duration: 220, easing: Easing.out(Easing.quad) });
+      overlayOp.value  = withTiming(1, { duration: 220 });
+    } else {
+      translateX.value = withTiming(DRAWER_WIDTH, { duration: 220, easing: Easing.out(Easing.quad) });
+      overlayOp.value  = withTiming(0, { duration: 220 });
+      // Unmount modal after slide-out animation
+      const t = setTimeout(() => setModalVisible(false), 230);
+      return () => clearTimeout(t);
+    }
   }, [sidebarOpen]);
 
   // Android hardware back button closes sidebar
@@ -132,7 +141,14 @@ export function Sidebar() {
   };
 
   return (
-    <>
+    <Modal
+      visible={modalVisible}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={closeSidebar}
+    >
+      {/* full-screen overlay — covers tab bar too */}
       <Animated.View
         style={[styles.overlay, overlayStyle]}
         pointerEvents={sidebarOpen ? 'auto' : 'none'}
@@ -266,7 +282,7 @@ export function Sidebar() {
           </View>
         </ScrollView>
       </Animated.View>
-    </>
+    </Modal>
   );
 }
 

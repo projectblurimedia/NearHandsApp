@@ -4,7 +4,7 @@ import {
   StyleSheet, RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyledText } from './StyledText';
 import { useApp } from '../hooks/useApp';
@@ -36,7 +36,7 @@ function PageHeader({ page, onClose }) {
       {/* Vegetable-Marketing-style squircle back button */}
       <TouchableOpacity onPress={onClose} hitSlop={12}>
         <View style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <FontAwesome5 name="chevron-left" size={18} color="#fff" style={{ marginLeft: -3 }} />
         </View>
       </TouchableOpacity>
       <MaterialCommunityIcons name={meta.icon} size={20} color="rgba(255,255,255,0.9)" />

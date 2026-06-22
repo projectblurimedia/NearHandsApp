@@ -63,11 +63,12 @@ export function PullRefreshScroll({
     PanResponder.create({
       onStartShouldSetPanResponder:        () => false,
       onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (_, g) =>
+      // Capture phase — fires before nested ScrollViews claim the gesture
+      onMoveShouldSetPanResponderCapture: (_, g) =>
         isAtTop.current &&
         !refreshing &&
-        g.dy > 10 &&
-        g.dy > Math.abs(g.dx) * 1.5,
+        g.dy > 12 &&
+        g.dy > Math.abs(g.dx) * 2,
 
       onPanResponderGrant: () => {
         setScrollEnabled(false);
