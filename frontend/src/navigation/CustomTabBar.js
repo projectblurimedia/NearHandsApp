@@ -7,54 +7,58 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyledText } from '../components/StyledText';
 import { useTheme } from '../hooks/useTheme';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
+// MaterialCommunityIcons = softer, rounder, more modern look
 const TABS = {
-  Home:     { on: 'home',          off: 'home-outline' },
-  Search:   { on: 'search',        off: 'search-outline' },
-  Problems: { on: 'alert-circle',  off: 'alert-circle-outline' },
-  Earnings: { on: 'wallet',        off: 'wallet-outline' },
-  Profile:  { on: 'person',        off: 'person-outline' },
+  Home:     { on: 'home-variant',         off: 'home-variant-outline' },
+  Search:   { on: 'magnify',              off: 'magnify' },
+  Problems: { on: 'bell-badge',           off: 'bell-outline' },
+  Earnings: { on: 'wallet',               off: 'wallet-outline' },
+  Profile:  { on: 'account-circle',       off: 'account-circle-outline' },
 };
 
 function TabItem({ route, isFocused, label, navigation }) {
   const { colors } = useTheme();
 
-  // Pill scale: 1 when active, 0 when inactive
-  const pillScale = useSharedValue(isFocused ? 1 : 0);
-  // Icon/label color: 1 = active blue, 0 = gray
-  const colorProgress = useSharedValue(isFocused ? 1 : 0);
+  // Pill: animates from 0 → 1 (scale + opacity) when tab becomes active
+  const pillProgress = useSharedValue(isFocused ? 1 : 0);
 
   useEffect(() => {
-    pillScale.value = withSpring(isFocused ? 1 : 0, {
-      damping: 20,
-      stiffness: 300,
+    pillProgress.value = withSpring(isFocused ? 1 : 0, {
+      damping: 18,
+      stiffness: 280,
     });
-    colorProgress.value = withTiming(isFocused ? 1 : 0, { duration: 180 });
   }, [isFocused]);
 
   const pillStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: pillScale.value }, { scaleY: pillScale.value }],
-    opacity: pillScale.value,
+    opacity: pillProgress.value,
+    transform: [
+      { scaleX: 0.6 + pillProgress.value * 0.4 },
+      { scaleY: 0.7 + pillProgress.value * 0.3 },
+    ],
   }));
 
-  const pressScale = useSharedValue(1);
-  const itemStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pressScale.value }],
+  const iconColor = isFocused ? '#ffffff' : colors.subtext;
+
+  // Press bounce
+  const bounce = useSharedValue(1);
+  const bounceStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bounce.value }],
   }));
 
   const handlePress = () => {
-    pressScale.value = withSpring(0.86, { damping: 16, stiffness: 400 }, () => {
-      pressScale.value = withSpring(1, { damping: 14, stiffness: 340 });
+    bounce.value = withSpring(0.84, { damping: 16, stiffness: 420 }, () => {
+      bounce.value = withSpring(1, { damping: 13, stiffness: 340 });
     });
     if (!isFocused) navigation.navigate(route.name);
   };
 
-  const icons = TABS[route.name] ?? { on: 'ellipse', off: 'ellipse-outline' };
+  const icons = TABS[route.name] ?? { on: 'circle', off: 'circle-outline' };
 
   return (
     <TouchableOpacity
@@ -62,9 +66,11 @@ function TabItem({ route, isFocused, label, navigation }) {
       style={styles.tabItem}
       activeOpacity={1}
     >
-      <Animated.View style={itemStyle}>
-        {/* Icon row: pill behind icon */}
-        <View style={styles.iconWrap}>
+      <Animated.View style={[styles.itemInner, bounceStyle]}>
+
+        {/* Icon container with pill underneath */}
+        <View style={styles.iconZone}>
+          {/* Gradient pill — behind icon, animates in/out */}
           <Animated.View style={[styles.pill, pillStyle]}>
             <LinearGradient
               colors={GRADIENT}
@@ -73,14 +79,15 @@ function TabItem({ route, isFocused, label, navigation }) {
               style={StyleSheet.absoluteFill}
             />
           </Animated.View>
-          <Ionicons
+
+          <MaterialCommunityIcons
             name={isFocused ? icons.on : icons.off}
-            size={21}
-            color={isFocused ? '#ffffff' : colors.subtext}
+            size={24}
+            color={iconColor}
           />
         </View>
 
-        {/* Label — always visible, color changes */}
+        {/* Label always visible — color changes */}
         <StyledText
           weight={isFocused ? '600' : '400'}
           style={[
@@ -91,6 +98,7 @@ function TabItem({ route, isFocused, label, navigation }) {
         >
           {label}
         </StyledText>
+
       </Animated.View>
     </TouchableOpacity>
   );
@@ -153,7 +161,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
     alignItems: 'center',
-    // Glowing blue shadow — kept from before
+    // Glowing blue shadow
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.18,
     shadowRadius: 24,
@@ -163,20 +171,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  itemInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 2,
   },
-  iconWrap: {
-    width: 52,
-    height: 32,
-    borderRadius: 16,
+  iconZone: {
+    width: 50,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   pill: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
   },
   label: {

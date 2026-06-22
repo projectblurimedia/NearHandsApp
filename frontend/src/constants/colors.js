@@ -33,8 +33,6 @@ export const GRADIENT = ['#1D9BF0', '#264B96'];
 export const GRADIENT_START = { x: 0, y: 0 };
 export const GRADIENT_END = { x: 1, y: 1 };
 
-// Sidebar header stays dark
-export const SIDEBAR_HEADER_GRADIENT = ['#0F2027', '#203A43', '#2C5364'];
 
 export const TOAST_COLORS = {
   success: '#10b981',

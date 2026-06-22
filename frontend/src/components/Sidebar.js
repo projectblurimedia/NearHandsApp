@@ -12,14 +12,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyledText } from './StyledText';
 import { useApp } from '../hooks/useApp';
 import { useTheme } from '../hooks/useTheme';
-import { SIDEBAR_HEADER_GRADIENT } from '../constants/colors';
+import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 import { SPACING, RADIUS, SIDEBAR_WIDTH } from '../constants/layout';
 
 const NAV_SECTIONS = [
   {
     key: 'nav',
     items: [
-      { key: 'home',     label: 'Home',              icon: 'home',               color: '#1CB5E0' },
+      { key: 'home',     label: 'Home',              icon: 'home',               color: '#1D9BF0' },
       { key: 'search',   label: 'Search Workers',    icon: 'search',             color: '#8b5cf6' },
       { key: 'problems', label: 'Problems',          icon: 'alert-circle',       color: '#f59e0b' },
       { key: 'earnings', label: 'Wallet & Earnings', icon: 'wallet',             color: '#10b981' },
@@ -29,9 +29,9 @@ const NAV_SECTIONS = [
   {
     key: 'more',
     items: [
-      { key: 'settings', label: 'Settings',        icon: 'settings',          color: '#64748b' },
-      { key: 'help',     label: 'Help & Support',  icon: 'help-circle',       color: '#06b6d4' },
-      { key: 'about',    label: 'About NearHands', icon: 'information-circle', color: '#3b82f6' },
+      { key: 'settings', label: 'Settings',         icon: 'settings',           color: '#64748b' },
+      { key: 'help',     label: 'Help & Support',   icon: 'help-circle',        color: '#06b6d4' },
+      { key: 'about',    label: 'About NearHands',  icon: 'information-circle', color: '#3b82f6' },
     ],
   },
 ];
@@ -93,36 +93,33 @@ export function Sidebar() {
 
       <Animated.View style={[styles.drawer, { backgroundColor: colors.card }, drawerStyle]}>
 
-        {/* ── Header: user info only, no app logo ─────────── */}
+        {/* ── Header: same gradient as main header ── */}
         <LinearGradient
-          colors={SIDEBAR_HEADER_GRADIENT}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + 18 }]}
+          colors={GRADIENT}
+          start={GRADIENT_START}
+          end={GRADIENT_END}
+          style={[styles.header, { paddingTop: insets.top + 16 }]}
         >
-          {/* Close button row */}
-          <TouchableOpacity
-            onPress={closeSidebar}
-            hitSlop={14}
-            style={styles.closeBtn}
-          >
-            <View style={styles.closeBtnCircle}>
-              <Ionicons name="close" size={14} color="rgba(255,255,255,0.9)" />
-            </View>
-          </TouchableOpacity>
-
-          {/* User card */}
-          <View style={styles.userCard}>
+          {/* Avatar + Name/Close row */}
+          <View style={styles.userRow}>
             <View style={styles.avatar}>
-              <Ionicons name="person" size={28} color="#1CB5E0" />
+              <Ionicons name="person" size={26} color="#1D9BF0" />
             </View>
-            <View style={{ flex: 1 }}>
-              <StyledText weight="700" style={styles.userName}>Guest User</StyledText>
+            <View style={styles.userInfo}>
+              {/* Name and close button — space-between */}
+              <View style={styles.nameCloseRow}>
+                <StyledText weight="700" style={styles.userName}>Guest User</StyledText>
+                <TouchableOpacity onPress={closeSidebar} hitSlop={14}>
+                  <View style={styles.closeBtnCircle}>
+                    <Ionicons name="close" size={14} color="rgba(255,255,255,0.9)" />
+                  </View>
+                </TouchableOpacity>
+              </View>
               <StyledText weight="400" style={styles.userSub}>Hyderabad, India</StyledText>
             </View>
           </View>
 
-          {/* Quick stats row */}
+          {/* Stats row */}
           <View style={styles.statsRow}>
             {[
               { label: 'Wallet', value: '₹280' },
@@ -137,7 +134,7 @@ export function Sidebar() {
           </View>
         </LinearGradient>
 
-        {/* ── Nav body ─────────────────────────────────────── */}
+        {/* ── Nav body ── */}
         <ScrollView
           style={styles.body}
           showsVerticalScrollIndicator={false}
@@ -151,7 +148,7 @@ export function Sidebar() {
             </View>
           ))}
 
-          {/* Dark / Light mode toggle */}
+          {/* Dark / Light toggle */}
           <View style={[styles.sectionGap, styles.toggleWrap, { backgroundColor: colors.inputBg }]}>
             <View style={[styles.iconBox, { backgroundColor: isDark ? '#fbbf2420' : '#f59e0b20' }]}>
               <Ionicons name={isDark ? 'moon' : 'sunny'} size={18} color={isDark ? '#fbbf24' : '#f59e0b'} />
@@ -162,13 +159,13 @@ export function Sidebar() {
             <Switch
               value={isDark}
               onValueChange={toggleTheme}
-              trackColor={{ false: '#d1d5db', true: '#1CB5E0' }}
+              trackColor={{ false: '#d1d5db', true: '#1D9BF0' }}
               thumbColor="#ffffff"
             />
           </View>
         </ScrollView>
 
-        {/* ── Logout ───────────────────────────────────────── */}
+        {/* ── Logout ── */}
         <TouchableOpacity
           style={[styles.logoutRow, { borderTopColor: colors.border, paddingBottom: insets.bottom + 10 }]}
           onPress={handleLogout}
@@ -209,40 +206,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.md + 4,
   },
-  closeBtn: {
-    alignSelf: 'flex-end',
-    marginBottom: SPACING.md,
-  },
-  closeBtnCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.22)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userCard: {
+  userRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginBottom: SPACING.md,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#ffffff',
     justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  nameCloseRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   userName: {
     color: '#fff',
     fontSize: 15,
   },
+  closeBtnCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.28)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   userSub: {
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.65)',
     fontSize: 11,
     marginTop: 2,
   },
@@ -252,34 +254,30 @@ const styles = StyleSheet.create({
   },
   statChip: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: RADIUS.md,
     paddingVertical: 7,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.14)',
   },
   statValue: {
     color: '#fff',
     fontSize: 13,
   },
   statLabel: {
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.6)',
     fontSize: 9,
     marginTop: 1,
   },
-  body: {
-    flex: 1,
-  },
+  body: { flex: 1 },
   bodyContent: {
     paddingHorizontal: SPACING.md,
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.md,
     gap: 4,
   },
-  sectionGap: {
-    marginTop: SPACING.sm,
-  },
+  sectionGap: { marginTop: SPACING.sm },
   navItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -296,10 +294,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  navLabel: {
-    flex: 1,
-    fontSize: 13,
-  },
+  navLabel: { flex: 1, fontSize: 13 },
   toggleWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -317,9 +312,5 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  logoutText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#ef4444',
-  },
+  logoutText: { flex: 1, fontSize: 14, color: '#ef4444' },
 });
