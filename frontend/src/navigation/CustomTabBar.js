@@ -4,7 +4,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,65 +13,38 @@ import { useTheme } from '../hooks/useTheme';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 
 const ICONS = {
-  Home:     { on: 'home-variant',      off: 'home-variant-outline' },
-  Search:   { on: 'magnify',           off: 'magnify' },
-  Problems: { on: 'bell-badge',        off: 'bell-outline' },
-  Earnings: { on: 'wallet',            off: 'wallet-outline' },
-  Profile:  { on: 'account-circle',    off: 'account-circle-outline' },
+  Home:     { on: 'home-variant',    off: 'home-variant-outline' },
+  Search:   { on: 'magnify',         off: 'magnify' },
+  Problems: { on: 'bell-badge',      off: 'bell-outline' },
+  Earnings: { on: 'wallet',          off: 'wallet-outline' },
+  Profile:  { on: 'account-circle',  off: 'account-circle-outline' },
 };
 
 const INACTIVE = '#94A3B8';
 
-/* ─── single tab item ─────────────────────────────────────────────── */
+/* ─── single tab item — no animations, clean instant switch ───────── */
 function TabItem({ route, isFocused, label, navigation }) {
-  // label slides in (maxWidth 0 → 60) and fades in
-  const labelW  = useSharedValue(isFocused ? 60 : 0);
-  const labelOp = useSharedValue(isFocused ? 1  : 0);
-  // press bounce
-  const bounce  = useSharedValue(1);
-
-  useEffect(() => {
-    labelW.value  = withSpring(isFocused ? 60 : 0, { damping: 20, stiffness: 260 });
-    labelOp.value = withTiming(isFocused ? 1  : 0, { duration: 180 });
-  }, [isFocused]);
-
-  const labelWrapStyle = useAnimatedStyle(() => ({
-    maxWidth: labelW.value,
-    opacity:  labelOp.value,
-  }));
-
-  const bounceStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: bounce.value }],
-  }));
-
-  const handlePress = () => {
-    bounce.value = withSpring(0.82, { damping: 12, stiffness: 450 }, () => {
-      bounce.value = withSpring(1,    { damping: 10, stiffness: 360 });
-    });
-    if (!isFocused) navigation.navigate(route.name);
-  };
-
   const icons = ICONS[route.name] ?? { on: 'circle', off: 'circle-outline' };
 
   return (
-    <TouchableOpacity style={styles.item} onPress={handlePress} activeOpacity={1}>
-      <Animated.View style={[styles.row, bounceStyle]}>
-
-        {/* icon */}
+    <TouchableOpacity
+      style={styles.item}
+      onPress={() => { if (!isFocused) navigation.navigate(route.name); }}
+      activeOpacity={0.75}
+    >
+      <View style={styles.row}>
         <MaterialCommunityIcons
           name={isFocused ? icons.on : icons.off}
-          size={22}
+          size={21}
           color={isFocused ? '#FFFFFF' : INACTIVE}
         />
-
-        {/* name — expands beside icon when active, collapses when inactive */}
-        <Animated.View style={[styles.labelWrap, labelWrapStyle]}>
+        {/* label appears instantly beside icon when active, gone when inactive */}
+        {isFocused && (
           <StyledText weight="600" numberOfLines={1} style={styles.label}>
             {label}
           </StyledText>
-        </Animated.View>
-
-      </Animated.View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -80,14 +52,13 @@ function TabItem({ route, isFocused, label, navigation }) {
 /* ─── tab bar ─────────────────────────────────────────────────────── */
 export function CustomTabBar({ state, descriptors, navigation }) {
   const { colors, isDark } = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets    = useSafeAreaInsets();
+  const [barW, setBarW] = useState(0);
+  const firstLayout     = useRef(true);
+  const tabCount        = state.routes.length;
+  const tabW            = barW > 0 ? barW / tabCount : 0;
 
-  const [barW, setBarW]     = useState(0);
-  const firstLayout         = useRef(true);
-  const tabCount            = state.routes.length;
-  const tabW                = barW > 0 ? barW / tabCount : 0;
-
-  // pill x — snaps on first layout, then springs on tab change
+  // pill slides between positions — only animation kept
   const pillX = useSharedValue(0);
 
   useEffect(() => {
@@ -106,32 +77,24 @@ export function CustomTabBar({ state, descriptors, navigation }) {
     width: tabW,
   }));
 
+  const barBg = isDark ? '#0F172A' : '#FFFFFF';
+
   return (
     <View
       style={[
         styles.wrapper,
-        {
-          backgroundColor: colors.background,
-          paddingBottom: Math.max(insets.bottom, 10),
-        },
+        { backgroundColor: colors.background, paddingBottom: Math.max(insets.bottom, 10) },
       ]}
     >
-      {/* shadow shell */}
-      <View
-        style={[
-          styles.shadow,
-          {
-            backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
-            shadowColor: '#1D9BF0',
-          },
-        ]}
-      >
-        {/* overflow:hidden inner so gradient pill clips to bar corners */}
+      {/* shadow shell — separate from overflow:hidden so glow isn't clipped */}
+      <View style={[styles.shadow, { backgroundColor: barBg, shadowColor: '#1D9BF0' }]}>
+
+        {/* inner — clips pill to bar's rounded corners */}
         <View
-          style={[styles.bar, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}
+          style={[styles.bar, { backgroundColor: barBg }]}
           onLayout={e => setBarW(e.nativeEvent.layout.width)}
         >
-          {/* sliding gradient pill (behind all items) */}
+          {/* gradient pill — inset top/bottom so all 4 corners are fully rounded */}
           {tabW > 0 && (
             <Animated.View style={[styles.pill, pillStyle]} pointerEvents="none">
               <LinearGradient
@@ -167,60 +130,48 @@ export function CustomTabBar({ state, descriptors, navigation }) {
   );
 }
 
-const R = 26;
+const BAR_RADIUS = 26;
 
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 14,
     paddingTop: 8,
   },
-
-  // carries the iOS/Android shadow
   shadow: {
-    borderRadius:  R,
+    borderRadius:  BAR_RADIUS,
     shadowOffset:  { width: 0, height: -3 },
     shadowOpacity: 0.22,
     shadowRadius:  22,
     elevation:     20,
   },
-
-  // clips the sliding pill to the bar's rounded corners
   bar: {
-    flexDirection: 'row',
-    borderRadius:  R,
-    overflow:      'hidden',
-    paddingVertical: 6,
+    flexDirection:   'row',
+    borderRadius:    BAR_RADIUS,
+    overflow:        'hidden',
+    paddingVertical: 7,
   },
-
-  // the gradient pill — absolute, same height as bar interior
+  // Pill inset 5px top/bottom → all 4 corners are visibly rounded (capsule shape)
   pill: {
-    position: 'absolute',
-    top:      0,
-    bottom:   0,
-    zIndex:   0,
+    position:     'absolute',
+    top:          5,
+    bottom:       5,
+    borderRadius: 100,   // fully rounded capsule — no sharp edges
+    overflow:     'hidden',
+    zIndex:       0,
   },
-
-  // each tab slot
   item: {
     flex:            1,
     alignItems:      'center',
     justifyContent:  'center',
-    zIndex:          1,            // above the pill
-    paddingVertical: 7,
+    paddingVertical: 6,
+    zIndex:          1,
   },
-
-  // horizontal layout: icon + name
+  // icon + name side-by-side
   row: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    gap:             5,
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           5,
   },
-
-  // animated container for the label
-  labelWrap: {
-    overflow: 'hidden',
-  },
-
   label: {
     fontSize:      11,
     color:         '#FFFFFF',
