@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,10 @@ import { StyledText } from './StyledText';
 import { useApp } from '../hooks/useApp';
 import { GRADIENT, GRADIENT_START, GRADIENT_END } from '../constants/colors';
 import { SPACING } from '../constants/layout';
+
+// Brand assets
+const ICON_IMG   = require('../../assets/brand/Icon.png');
+const BANNER_IMG = require('../../assets/brand/Banner.png');
 
 export function GradientHeader() {
   const { openSidebar } = useApp();
@@ -19,14 +23,28 @@ export function GradientHeader() {
       end={GRADIENT_END}
       style={[styles.container, { paddingTop: insets.top + 16 }]}
     >
-      {/* Logo + Title */}
+      {/* Logo image + Banner title image */}
       <View style={styles.titleGroup}>
+
+        {/* Icon.png — replaces the "N" box, same 38×38 size */}
         <View style={styles.logoMark}>
-          <StyledText weight="800" style={styles.logoLetter}>N</StyledText>
+          <Image
+            source={ICON_IMG}
+            style={styles.iconImg}
+            resizeMode="cover"
+          />
         </View>
-        <View>
-          <StyledText weight="800" style={styles.title}>NearHands</StyledText>
-          <StyledText weight="400" style={styles.tagline}>Find workers nearby</StyledText>
+
+        <View style={styles.titleStack}>
+          {/* Banner.png — replaces "NearHands" text, same 22px height */}
+          <Image
+            source={BANNER_IMG}
+            style={styles.bannerImg}
+            resizeMode="contain"
+          />
+          <StyledText weight="400" style={styles.tagline}>
+            Find workers nearby
+          </StyledText>
         </View>
       </View>
 
@@ -48,11 +66,11 @@ export function GradientHeader() {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection:   'row',
-    alignItems:      'center',
+    flexDirection:     'row',
+    alignItems:        'center',
     paddingHorizontal: SPACING.md,
-    paddingBottom:   SPACING.md + 2,
-    gap:             SPACING.sm,
+    paddingBottom:     SPACING.md + 2,
+    gap:               SPACING.sm,
   },
   titleGroup: {
     flex:          1,
@@ -60,17 +78,38 @@ const styles = StyleSheet.create({
     alignItems:    'center',
     gap:           11,
   },
+
+  // Wrapper keeps the rounded border styling; image fills it
   logoMark: {
-    width: 38, height: 38,
+    width:        38,
+    height:       38,
     borderRadius: 11,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.45)',
-    justifyContent: 'center', alignItems: 'center',
+    overflow:     'hidden',      // clips Icon.png to rounded corners
+    borderWidth:  1.5,
+    borderColor:  'rgba(255,255,255,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  logoLetter: { color: '#fff', fontSize: 20, lineHeight: 24 },
-  title:      { color: '#fff', fontSize: 18, letterSpacing: 0.3, lineHeight: 22 },
-  tagline:    { color: 'rgba(255,255,255,0.68)', fontSize: 11, letterSpacing: 0.2, lineHeight: 15 },
+  iconImg: {
+    width:  38,
+    height: 38,
+  },
+
+  titleStack: {
+    justifyContent: 'center',
+    gap:            2,
+  },
+  // Banner.png at the same pixel height as the old "NearHands" title text
+  bannerImg: {
+    height:    22,               // matches old fontSize 18 / lineHeight 22
+    width:     130,              // wide enough to show full banner
+  },
+  tagline: {
+    color:         'rgba(255,255,255,0.68)',
+    fontSize:      11,
+    letterSpacing: 0.2,
+    lineHeight:    15,
+  },
+
   rightGroup: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   ghostBtn:   { padding: 5 },
   menuBtn:    { padding: 5, marginLeft: 2 },

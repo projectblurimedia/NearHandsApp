@@ -4,21 +4,24 @@
     "slug": "nearhands",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/brand/Logo.png",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/brand/Logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1D9BF0"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/brand/Logo.png",
+        "backgroundColor": "#1D9BF0"
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/brand/Logo.png"
     },
     "plugins": [
       "expo-font",
